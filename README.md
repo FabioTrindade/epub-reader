@@ -38,26 +38,31 @@ livros ficam guardados só no seu computador.
 
 1. Abra **[fabiotrindade.github.io/epub-reader](https://fabiotrindade.github.io/epub-reader/)**
    no navegador do computador ou do celular.
-2. Arraste um arquivo `.epub` para a página ou clique em **Escolher arquivo**.
+2. Arraste um arquivo `.epub` para qualquer lugar da página ou clique em
+   **Escolher arquivo**.
 3. Escolha um capítulo no sumário à esquerda. A tradução começa sozinha.
 
 > **Dica:** a primeira página de quase todo livro é a capa, que só tem imagem e
-> nada para traduzir. Se nada mudou, escolha o primeiro capítulo no sumário.
+> nada para traduzir. O app avisa e oferece um botão para ir direto ao primeiro
+> capítulo.
 
 Não tem um EPUB à mão? Veja [onde encontrar livros gratuitos](#onde-encontrar-livros-gratuitos).
 
 ### Modos de leitura
 
-Os três botões no topo da tela escolhem o que aparece:
+O seletor no centro do topo escolhe o que aparece:
 
 | Modo | O que mostra |
 |---|---|
 | **Original** | Só o texto do livro. Nenhuma tradução é feita. |
 | **Lado a lado** | Original à esquerda, tradução à direita, parágrafo por parágrafo. É o modo padrão. |
-| **Traduzido** | Só a tradução. |
+| **Tradução** | Só a tradução. |
 
-O modo escolhido fica salvo. Um capítulo traduzido uma vez fica guardado no
-navegador e aparece na hora quando você volta a ele, sem gastar internet.
+O modo escolhido fica salvo. Enquanto um capítulo é traduzido, o topo mostra
+"Traduzindo N%" (clique nele para cancelar) e os parágrafos que ainda não
+chegaram aparecem como barras cinzas. Um capítulo traduzido uma vez fica
+guardado no navegador e aparece na hora quando você volta a ele, sem gastar
+internet.
 
 O idioma do livro é detectado automaticamente. O idioma da tradução pode ser
 português do Brasil (padrão), português de Portugal, espanhol, francês, alemão
@@ -67,8 +72,9 @@ ou italiano.
 
 Clique em qualquer palavra do texto original para abrir um pequeno verbete com a
 tradução principal e os sentidos agrupados por classe gramatical. Feche com
-`Esc` ou clicando fora dele. Selecionar um trecho arrastando o mouse não abre o
-dicionário, então dá para marcar texto normalmente.
+`Esc` ou clicando fora dele; no celular, o verbete sobe do rodapé e fecha
+também arrastando para baixo. Selecionar um trecho arrastando o mouse não abre
+o dicionário, então dá para marcar texto normalmente.
 
 <img src="docs/screenshots/dicionario.png" alt="Verbete do dicionário aberto sobre a palavra shore, com a tradução costa e os sentidos do substantivo" width="100%">
 
@@ -80,56 +86,68 @@ São duas marcas diferentes, cada uma com um visual próprio:
 |---|---|---|
 | Para quê | Saber onde continuar a leitura | Guardar passagens que você quer rever |
 | Quantas | Uma por livro (ela se move) | Quantas quiser |
-| No texto | Linha colorida, como marca-texto | Fita discreta na margem |
+| No texto | Linha colorida, como marca-texto | Fitinha azul na margem |
 | Onde encontrar | Botão "Voltar para onde parei" | Aba "Trechos salvos", na lateral |
 | Atalho | `m` | `b` |
 
-**Para marcar onde parou**, selecione a palavra ou frase e clique em
-**Parei aqui** no rodapé. Sem selecionar nada, o app marca o parágrafo que está
-no topo da tela. Quando a marca sai de vista, aparece o botão
-**Voltar para onde parei**, que leva até ela mesmo que esteja em outro capítulo.
-Ao reabrir o livro, ele já abre na marca.
+**Ao selecionar um trecho**, aparece junto dele uma barra com **Parei aqui**,
+**Salvar** e **Copiar**. Se o trecho já estiver marcado, o primeiro botão vira
+**Remover marca**.
 
-Com a marca visível e nada selecionado, o mesmo botão vira **Remover marca**.
-O texto do botão sempre diz o que o próximo clique vai fazer.
+**Sem selecionar nada**, a tecla `m` ou o pequeno botão ao lado do número do
+capítulo, no rodapé, marcam o parágrafo que está no topo da tela; a tecla `b`
+salva esse parágrafo. O texto do botão sempre diz o que o próximo clique vai
+fazer.
+
+Quando a marca sai de vista, aparece o botão **Voltar para onde parei**, que
+leva até ela mesmo que esteja em outro capítulo. Ao reabrir o livro, ele já
+abre na marca.
 
 ### Biblioteca e progresso
 
-O ícone de livro no topo abre a sua biblioteca. Cada livro mostra a capa, o
-capítulo em que você está e quanto já leu. O percentual é calculado pela
-quantidade de texto, não pelo número de capítulos, então "50%" quer dizer
-metade do livro de verdade. Livro terminado fica verde, e livro que você nunca
-abriu aparece como "Não iniciado".
+O ícone de livros no topo (no celular, a seta de voltar) abre a sua biblioteca.
+No alto fica o livro que você está lendo, com a frase onde parou e o botão
+**Continuar de onde parei**. Embaixo, todos os livros, com quanto você já leu
+de cada um: o percentual é calculado pela quantidade de texto, não pelo número
+de capítulos, então "50%" quer dizer metade do livro de verdade. Livro
+terminado aparece como "Concluído", e livro que você nunca abriu, como "Não
+iniciado". O rodapé da leitura mostra o mesmo número: "Capítulo 7 de 146 · 2%
+do livro".
 
-Para tirar um livro da biblioteca, use o botão de remover no card. Isso apaga
-também o progresso e as marcas daquele livro.
+Para tirar um livro da biblioteca, use o menu **⋯** no card e escolha
+**Remover livro**. Isso apaga também o progresso, as marcas e as traduções
+guardadas daquele livro.
 
 <img src="docs/screenshots/biblioteca.png" alt="Biblioteca com Moby Dick em 2% e Pride and Prejudice em 31%, com a barra de progresso na base da capa" width="100%">
 
 ### No celular
 
 O app se adapta a telas pequenas. Como duas colunas não cabem, os modos de
-leitura viram duas abas logo abaixo do topo, **Original** e **Traduzido**, e o
-sumário abre pelo botão de menu. Se você usa **Lado a lado** no computador, ele
-continua assim quando você volta para a tela grande.
+leitura viram duas opções logo abaixo do topo, **Original** e **Tradução**, e o
+sumário abre pelo botão de menu no rodapé. Se você usa **Lado a lado** no
+computador, ele continua assim quando você volta para a tela grande.
 
 <p align="center">
   <img src="docs/screenshots/celular-escuro.png" alt="App no celular com tema escuro, mostrando o capítulo 1 de Moby Dick traduzido" width="300">
 </p>
 
-### Configurações
+### Aparência
 
-O ícone de engrenagem abre as preferências, que ficam salvas no navegador:
+O botão **Aa** no topo abre as preferências, que ficam salvas no navegador:
 
-- **Tamanho da fonte** e **altura da linha**.
-- **Fonte** serifada ou sem serifa.
-- **Tema** claro, escuro ou seguindo o sistema. O botão de lua no topo também
-  alterna o tema.
+- **Tamanho do texto**, de 14 a 28 pixels.
+- **Fonte** serifada ou sem serifa, e **espaçamento** entre linhas compacto,
+  normal ou amplo.
+- **Tema** claro, escuro ou seguindo o sistema.
 - **Cor da marca "parei aqui"**: âmbar, verde, azul, rosa ou roxo. Todas foram
   escolhidas para manter o texto legível nos dois temas.
-- **Idioma da tradução**.
-- **Armazenamento**: quanto espaço o app está usando e um botão para limpar as
-  traduções guardadas do livro atual.
+- **Traduzir para**: o idioma da tradução.
+- **Armazenamento e diagnóstico**: quanto espaço o app está usando, um botão
+  para limpar as traduções guardadas do livro atual e outro para copiar o
+  diagnóstico.
+
+No computador, o botão do canto esquerdo do topo recolhe o sumário para dar
+mais espaço ao texto; a escolha fica salva.
 
 ### Atalhos de teclado
 
@@ -138,7 +156,7 @@ O ícone de engrenagem abre as preferências, que ficam salvas no navegador:
 | `←` / `→` | Capítulo anterior / próximo |
 | `m` | Parei aqui |
 | `b` | Salvar trecho |
-| `Esc` | Fecha o dicionário e as janelas abertas |
+| `Esc` | Fecha a barra de seleção, o dicionário e os painéis abertos |
 
 ## Privacidade
 
@@ -201,7 +219,7 @@ quando isso acontece.
 
 Provavelmente você está na capa, que não tem texto. Escolha um capítulo no
 sumário. Confira também se o modo não está em **Original**, que não traduz.
-Um capítulo que já foi traduzido antes aparece pronto, sem barra de progresso.
+Um capítulo que já foi traduzido antes aparece pronto, sem "Traduzindo N%".
 </details>
 
 <details>
@@ -209,15 +227,17 @@ Um capítulo que já foi traduzido antes aparece pronto, sem barra de progresso.
 
 O app usa serviços de tradução gratuitos, que limitam o uso quando recebem
 muitos pedidos. Quando isso acontece, o app espera, tenta de novo e, se
-preciso, troca do Google para o MyMemory, que é mais lento. O sino no topo
-mostra o que aconteceu. Se nenhum dos dois responder, tente de novo mais tarde.
+preciso, troca do Google para o MyMemory, que é mais lento. Em **⋯ →
+Notificações**, no topo, você vê o que aconteceu. Se nenhum dos dois responder,
+os parágrafos afetados mostram "Não foi possível traduzir este trecho" com um
+botão **Tentar de novo**: use-o mais tarde, e só o que faltou é pedido de novo.
 </details>
 
 <details>
 <summary><b>Meu livro não abre</b></summary>
 
 Os motivos mais comuns são o arquivo ter DRM ou não ser um EPUB (PDF e
-arquivos do Kindle não funcionam). O sino no topo mostra o motivo exato.
+arquivos do Kindle não funcionam). Em **⋯ → Notificações** aparece o motivo exato.
 </details>
 
 <details>
@@ -225,7 +245,7 @@ arquivos do Kindle não funcionam). O sino no topo mostra o motivo exato.
 
 É de propósito. O estilo que vem dentro do livro é a principal causa de texto
 ilegível no tema escuro. O app usa a fonte, o tamanho e o tema que você
-escolheu nas configurações.
+escolheu em **Aa**.
 </details>
 
 <details>
@@ -239,7 +259,7 @@ os dados de navegação do site também apaga a biblioteca.
 <details>
 <summary><b>Quanto espaço o app ocupa?</b></summary>
 
-Em **Configurações → Armazenamento** você vê o espaço usado. Para liberar
+Em **Aa → Armazenamento e diagnóstico** você vê o espaço usado. Para liberar
 espaço, limpe as traduções guardadas do livro atual ou remova da biblioteca os
 livros que já terminou.
 </details>
@@ -265,7 +285,7 @@ profissional.
 
 Abra uma [issue](https://github.com/FabioTrindade/epub-reader/issues)
 descrevendo o que você fez e o que aconteceu. Ajuda muito colar o relatório do
-botão **Copiar diagnóstico**, que fica no sino do topo da tela. Ele traz o
+item **Copiar diagnóstico**, no menu **⋯** do topo da tela. Ele traz o
 navegador e a lista de avisos do app. Revise antes de colar, porque ele pode
 incluir o nome do arquivo do livro.
 
@@ -307,6 +327,9 @@ aviso de copyright.
 
 - [JSZip](https://stuk.github.io/jszip/), de Stuart Knightley (licença MIT ou
   GPLv3), para abrir os arquivos EPUB.
+- Fontes [Literata](https://github.com/googlefonts/literata) e
+  [Inter](https://github.com/rsms/inter), sob a SIL Open Font License, servidas
+  pelo próprio app (licenças em [fonts/](fonts/)).
 - Tradução e dicionário pelo [Google Tradutor](https://translate.google.com/) e
   pelo [MyMemory](https://mymemory.translated.net/).
 - Livros das capturas de tela: [Project Gutenberg](https://www.gutenberg.org/).
