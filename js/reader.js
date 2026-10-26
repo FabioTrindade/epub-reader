@@ -21,6 +21,7 @@ export class Reader extends EventTarget {
   #dictionary = null;
   #abort = null;
   #saveTimer = null;
+  #viewMode = null;
 
   constructor(viewportEl) {
     super();
@@ -99,7 +100,9 @@ export class Reader extends EventTarget {
     this.viewport.append(container);
     this.container = container;
 
-    this.applyViewMode(storage.getPrefs().viewMode);
+    // A vista efetiva vem de quem chamou applyViewMode por último: no celular
+    // é a aba escolhida, não a preferência salva ("split" não cabe lá).
+    this.applyViewMode(this.#viewMode ?? storage.getPrefs().viewMode);
 
     const markEl = this.#applyMark();
     this.refreshBookmarks();
@@ -154,6 +157,8 @@ export class Reader extends EventTarget {
   }
 
   applyViewMode(mode) {
+    // Guardado mesmo sem capítulo aberto: o primeiro loadChapter usa este modo.
+    this.#viewMode = mode;
     if (!this.container) return;
     this.container.classList.remove('mode-original', 'mode-translated', 'mode-split');
     this.container.classList.add(`mode-${mode}`);

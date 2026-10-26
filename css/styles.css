@@ -1091,8 +1091,9 @@ mark.dict-highlight {
 @media (max-width: 768px) {
   .app-title p { display: none; }
 
-  /* Duas colunas não cabem no celular: o modo vira abas (ver syncMobileTabs). */
-  .mode-switch .split-only { display: none; }
+  /* Duas colunas não cabem no celular, e o seletor do topo tiraria o espaço do
+     título: os modos viram as abas Original/Traduzido (ver syncMobileTabs). */
+  .mode-switch { display: none; }
   .mode-split .tr-row { display: block; }
   .mode-split .tr-trans {
     margin-top: .4em;
@@ -1114,7 +1115,6 @@ mark.dict-highlight {
 }
 
 @media (max-width: 420px) {
-  .mode-switch button { padding: .4rem .5rem; font-size: .76rem; }
   .app-title h1 { font-size: .9rem; }
 }
 

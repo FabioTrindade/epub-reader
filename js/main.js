@@ -433,10 +433,15 @@ function wireViewModes(initial) {
   }
   for (const btn of document.querySelectorAll('#mobile-tabs button')) {
     btn.addEventListener('click', () => {
-      for (const b of document.querySelectorAll('#mobile-tabs button')) {
-        b.classList.toggle('is-active', b === btn);
+      const mode = btn.dataset.mobileMode;
+      // Com "split" salvo, a aba só troca a vista e o desktop continua lado a
+      // lado. Fora dele, a aba faz o papel do seletor do topo: grava o modo.
+      if (storage.getPrefs().viewMode === 'split') {
+        selectMobileTab(mode);
+        reader.applyViewMode(mode);
+      } else {
+        setViewMode(mode);
       }
-      reader.applyViewMode(btn.dataset.mobileMode);
     });
   }
 
@@ -444,20 +449,28 @@ function wireViewModes(initial) {
   setViewMode(initial);
 }
 
+function selectMobileTab(mode) {
+  for (const btn of document.querySelectorAll('#mobile-tabs button')) {
+    btn.classList.toggle('is-active', btn.dataset.mobileMode === mode);
+  }
+}
+
 /**
- * No celular o lado-a-lado não cabe: vira abas. A preferência salva continua
- * sendo "split", então ao voltar ao desktop o modo escolhido é respeitado.
+ * No celular o lado-a-lado não cabe, e o seletor do topo tiraria o espaço do
+ * título: os modos viram as abas Original/Traduzido. Com a preferência em
+ * "split", a aba lembra a última escolha e o desktop continua lado a lado.
  */
 function syncMobileTabs(mode) {
-  const useTabs = MOBILE.matches && mode === 'split';
-  $('#mobile-tabs').hidden = !useTabs;
+  $('#mobile-tabs').hidden = !MOBILE.matches;
 
-  if (useTabs) {
-    const active = document.querySelector('#mobile-tabs .is-active')?.dataset.mobileMode || 'original';
-    reader.applyViewMode(active);
-  } else {
+  if (!MOBILE.matches) {
     reader.applyViewMode(mode);
+    return;
   }
+
+  if (mode !== 'split') selectMobileTab(mode);
+  const active = document.querySelector('#mobile-tabs .is-active')?.dataset.mobileMode || 'original';
+  reader.applyViewMode(active);
 }
 
 function setViewMode(mode) {
