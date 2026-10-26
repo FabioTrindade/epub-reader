@@ -9,7 +9,7 @@ import * as storage from './storage.js';
 import * as db from './db.js';
 import {
   $, applyPrefs, toast, wireDialogs,
-  NotificationUI, SidebarUI, LibraryUI, SettingsUI, PopoverMenu,
+  NotificationUI, SidebarUI, LibraryUI, AppearanceUI, PopoverMenu,
 } from './ui.js';
 
 const MOBILE = window.matchMedia('(max-width: 768px)');
@@ -27,7 +27,7 @@ function init() {
   applyPrefs(prefs);
 
   wireDialogs();
-  new NotificationUI();
+  const notifications = new NotificationUI();
   new PopoverMenu($('#btn-more'), $('#menu-more'));
   new PopoverMenu($('#translate-status'), $('#menu-translate'));
 
@@ -41,7 +41,12 @@ function init() {
     }
   );
   library = new LibraryUI(openFromLibrary, deleteBook);
-  settings = new SettingsUI(onPrefChange, clearTranslationCache);
+  settings = new AppearanceUI({
+    onChange: onPrefChange,
+    onClearCache: clearTranslationCache,
+    onCopyDiagnostic: () => notifications.copyDiagnostic(),
+    onCancelTranslation: cancelTranslation,
+  });
   settings.sync(prefs);
 
   wireFileInput();
@@ -279,12 +284,14 @@ function wireReaderEvents() {
     reader.addEventListener(type, hideTranslating);
   }
 
-  $('#btn-cancel-translate').addEventListener('click', () => {
-    // Abortar de fato: só trocar o modo deixaria os requests correndo.
-    reader.cancelTranslation();
-    setViewMode('original');
-    hideTranslating();
-  });
+  $('#btn-cancel-translate').addEventListener('click', cancelTranslation);
+}
+
+function cancelTranslation() {
+  // Abortar de fato: só trocar o modo deixaria os requests correndo.
+  reader.cancelTranslation();
+  setViewMode('original');
+  hideTranslating();
 }
 
 /**

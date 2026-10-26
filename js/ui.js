@@ -21,7 +21,9 @@ export function applyTheme(theme) {
 
 export function applyPrefs(prefs) {
   const root = document.documentElement;
-  root.style.setProperty('--reader-font-size', `${prefs.fontSize}px`);
+  // Sem tamanho escolhido, vale o padrão do CSS (19px, ou 18px no celular).
+  if (prefs.fontSize) root.style.setProperty('--reader-font-size', `${prefs.fontSize}px`);
+  else root.style.removeProperty('--reader-font-size');
   root.style.setProperty('--reader-line-height', prefs.lineHeight);
   root.style.setProperty('--reader-font-family',
     prefs.fontFamily === 'sans' ? 'var(--font-sans)' : 'var(--font-serif)');
@@ -220,6 +222,8 @@ export class NotificationUI {
       toast('info', 'Diagnóstico copiado', 'Cole onde for relatar o problema.');
     } catch {
       // Clipboard bloqueado: mostrar o texto ainda permite copiar manualmente.
+      // Abre a lista porque o pedido pode ter vindo do menu ⋯ ou do "Aa".
+      if (!this.dialog.open) this.open();
       const area = document.createElement('textarea');
       area.className = 'diagnostic-fallback';
       area.value = text;
@@ -478,67 +482,184 @@ export class LibraryUI {
   }
 }
 
-/* ------------------------------- configurações ----------------------------- */
+/* -------------------------------- aparência -------------------------------- */
 
-export class SettingsUI {
-  constructor(onChange, onClearCache) {
-    this.dialog = $('#dlg-settings');
-    this.onChange = onChange;
+const SIZE_MIN = 14;
+const SIZE_MAX = 28;
+const SIZE_DOTS = 6;
+
+/** Sem escolha salva, o tamanho é o padrão do aparelho: 19px, ou 18px no celular. */
+export function effectiveFontSize(prefs) {
+  return prefs.fontSize ?? (MOBILE.matches ? 18 : 19);
+}
+
+const setPressed = (buttons, isOn) => {
+  for (const btn of buttons) btn.setAttribute('aria-pressed', String(isOn(btn)));
+};
+
+/**
+ * Painel "Aa": tamanho, fonte, espaçamento, tema, cor da marca, idioma e
+ * armazenamento. Cada toque grava e aplica na hora — não há "salvar".
+ */
+export class AppearanceUI {
+  constructor({ onChange, onClearCache, onCopyDiagnostic, onCancelTranslation }) {
+    this.dialog = $('#dlg-appearance');
+    const all = (sel) => this.dialog.querySelectorAll(sel);
 
     // Há um "Aa" no topo da leitura e outro no da biblioteca.
     for (const btn of document.querySelectorAll('[data-action="appearance"]')) {
-      btn.addEventListener('click', () => this.open());
+      btn.addEventListener('click', () => this.open(btn));
     }
+
+    const set = (key, value) => {
+      const prefs = storage.setPrefs({ [key]: value });
+      applyPrefs(prefs);
+      this.sync(prefs);
+      onChange(key, value, prefs);
+    };
+    const step = (delta) => {
+      const size = effectiveFontSize(storage.getPrefs()) + delta;
+      set('fontSize', Math.min(SIZE_MAX, Math.max(SIZE_MIN, size)));
+    };
+
+    $('#size-down').addEventListener('click', () => step(-1));
+    $('#size-up').addEventListener('click', () => step(1));
+    for (const btn of all('[data-font]')) btn.addEventListener('click', () => set('fontFamily', btn.dataset.font));
+    for (const btn of all('[data-spacing]')) btn.addEventListener('click', () => set('lineHeight', Number(btn.dataset.spacing)));
+    for (const btn of all('[data-theme-choice]')) btn.addEventListener('click', () => set('theme', btn.dataset.themeChoice));
+    for (const btn of all('.swatch')) btn.addEventListener('click', () => set('markColor', btn.dataset.color));
+    for (const btn of all('[data-lang]')) {
+      btn.addEventListener('click', () => {
+        set('targetLang', btn.dataset.lang);
+        this.show('main');
+      });
+    }
+    for (const btn of all('[data-goto]')) btn.addEventListener('click', () => this.show(btn.dataset.goto));
+
     $('#btn-clear-cache').addEventListener('click', onClearCache);
+    $('#appearance-copy-diagnostic').addEventListener('click', onCopyDiagnostic);
+    $('#appearance-cancel').addEventListener('click', () => {
+      onCancelTranslation();
+      this.dialog.close();
+    });
 
-    this.bindings = [
-      ['#set-font-size', 'fontSize', Number, '#out-font-size', (v) => `${v}px`],
-      ['#set-line-height', 'lineHeight', Number, '#out-line-height', (v) => v],
-      ['#set-font-family', 'fontFamily', String, null, null],
-      ['#set-mark-color', 'markColor', String, null, null],
-      ['#set-theme', 'theme', String, null, null],
-      ['#set-target-lang', 'targetLang', String, null, null],
-    ];
+    this.dialog.addEventListener('close', () => this.show('main'));
+    enableSheetDrag(this.dialog);
+  }
 
-    for (const [sel, key, cast, outSel, fmt] of this.bindings) {
-      const apply = (ev) => {
-        const value = cast(ev.target.value);
-        const prefs = storage.setPrefs({ [key]: value });
-        if (outSel) $(outSel).textContent = fmt(value);
-        applyPrefs(prefs);
-        this.onChange(key, value, prefs);
-      };
-      // 'input' cobre o arrastar dos sliders; 'change' é o evento canônico do
-      // <select> e o único garantido em navegação por teclado.
-      $(sel).addEventListener('input', apply);
-      $(sel).addEventListener('change', apply);
-    }
+  show(view) {
+    for (const el of this.dialog.querySelectorAll('.sheet-view')) el.hidden = el.dataset.view !== view;
+    if (view === 'storage') this.#refreshStorage();
   }
 
   sync(prefs) {
-    for (const [sel, key, , outSel, fmt] of this.bindings) {
-      $(sel).value = prefs[key];
-      if (outSel) $(outSel).textContent = fmt(prefs[key]);
-    }
+    const all = (sel) => this.dialog.querySelectorAll(sel);
+    const size = effectiveFontSize(prefs);
+
+    // 15 tamanhos em 6 pontos: proporcional, sempre pelo menos um aceso.
+    const lit = Math.round(((size - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * (SIZE_DOTS - 1)) + 1;
+    const dots = $('#size-dots');
+    dots.replaceChildren(...Array.from({ length: SIZE_DOTS }, (_, i) => {
+      const dot = document.createElement('span');
+      if (i < lit) dot.className = 'is-on';
+      return dot;
+    }));
+    dots.setAttribute('aria-label', `Tamanho ${size}px, de ${SIZE_MIN} a ${SIZE_MAX}`);
+    $('#size-down').disabled = size <= SIZE_MIN;
+    $('#size-up').disabled = size >= SIZE_MAX;
+
+    setPressed(all('[data-font]'), (b) => b.dataset.font === prefs.fontFamily);
+    // Entrelinhas salvas antes do painel podem não ser 1.4/1.7/2: acende a mais próxima.
+    const spacing = [...all('[data-spacing]')];
+    const nearest = spacing.reduce((best, b) =>
+      Math.abs(b.dataset.spacing - prefs.lineHeight) < Math.abs(best.dataset.spacing - prefs.lineHeight) ? b : best);
+    setPressed(spacing, (b) => b === nearest);
+    setPressed(all('[data-theme-choice]'), (b) => b.dataset.themeChoice === prefs.theme);
+    setPressed(all('.swatch'), (b) => b.dataset.color === prefs.markColor);
+    setPressed(all('[data-lang]'), (b) => b.dataset.lang === prefs.targetLang);
+    $('#lang-current').textContent = this.dialog.querySelector(`[data-lang="${prefs.targetLang}"]`)?.textContent || prefs.targetLang;
   }
 
-  async open() {
-    const estimate = await db.estimateUsage();
-    $('#storage-info').textContent = estimate
-      ? `${(estimate.usage / 1024 / 1024).toFixed(1)} MB usados de ~${(estimate.quota / 1024 / 1024 / 1024).toFixed(1)} GB disponíveis`
-      : 'Uso de armazenamento indisponível neste navegador.';
+  open(anchor) {
+    this.sync(storage.getPrefs());
+    this.show('main');
+    this.#refreshStorage();
     this.dialog.showModal();
+    placePopover(this.dialog, anchor);
   }
+
+  async #refreshStorage() {
+    const estimate = await db.estimateUsage();
+    const used = estimate ? `${(estimate.usage / 1024 / 1024).toFixed(1)} MB` : '';
+    $('#storage-short').textContent = used;
+    $('#storage-info').textContent = estimate
+      ? `${used} usados de ~${(estimate.quota / 1024 / 1024 / 1024).toFixed(1)} GB disponíveis neste navegador.`
+      : 'Uso de armazenamento indisponível neste navegador.';
+  }
+}
+
+/* ------------------------------ popover e painel ---------------------------- */
+
+const MOBILE = window.matchMedia('(max-width: 768px)');
+
+/**
+ * No computador, painéis como o "Aa" abrem como popover sob o botão que os
+ * chamou. No celular o CSS os encaixa no rodapé e a posição é ignorada.
+ */
+export function placePopover(dialog, anchor) {
+  if (!anchor || MOBILE.matches) {
+    dialog.style.top = '';
+    dialog.style.left = '';
+    return;
+  }
+  const rect = anchor.getBoundingClientRect();
+  const width = dialog.offsetWidth;
+  dialog.style.top = `${rect.bottom + 8}px`;
+  dialog.style.left = `${Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8))}px`;
+}
+
+/** No celular, o painel fecha arrastando a alça para baixo. */
+export function enableSheetDrag(sheet) {
+  const handle = sheet.querySelector('.sheet-handle');
+  if (!handle) return;
+  let startY = null;
+
+  handle.addEventListener('pointerdown', (ev) => {
+    startY = ev.clientY;
+    handle.setPointerCapture(ev.pointerId);
+    sheet.style.transition = 'none';
+  });
+  handle.addEventListener('pointermove', (ev) => {
+    if (startY === null) return;
+    sheet.style.transform = `translateY(${Math.max(0, ev.clientY - startY)}px)`;
+  });
+  const end = (ev) => {
+    if (startY === null) return;
+    const dragged = ev.clientY - startY;
+    startY = null;
+    sheet.style.transition = '';
+    sheet.style.transform = '';
+    if (dragged > 80) sheet.close();
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
 }
 
 /* --------------------------------- diálogos -------------------------------- */
 
 export function wireDialogs() {
   for (const dialog of document.querySelectorAll('dialog')) {
-    dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
-    // Clique no backdrop fecha: o <dialog> nativo não faz isso sozinho.
+    for (const btn of dialog.querySelectorAll('[data-close]')) {
+      btn.addEventListener('click', () => dialog.close());
+    }
+    // Clique no backdrop fecha: o <dialog> nativo não faz isso sozinho. O alvo
+    // também é o dialog num clique no seu próprio padding, então confere se
+    // o ponto caiu fora da caixa.
     dialog.addEventListener('click', (ev) => {
-      if (ev.target === dialog) dialog.close();
+      if (ev.target !== dialog) return;
+      const r = dialog.getBoundingClientRect();
+      const inside = ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+      if (!inside) dialog.close();
     });
   }
 }

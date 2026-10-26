@@ -152,68 +152,116 @@
   </div>
 </dialog>
 
-<dialog id="dlg-settings" class="dialog">
-  <div class="dialog-head">
-    <h2>Configurações</h2>
-    <button class="icon-btn" data-close aria-label="Fechar">&times;</button>
+<!-- Aparência: popover ancorado ao "Aa" no computador; painel que sobe do
+     rodapé no celular. Três vistas: principal, idiomas e armazenamento. -->
+<dialog id="dlg-appearance" class="sheet appearance" aria-labelledby="appearance-title">
+  <span class="sheet-handle" aria-hidden="true"></span>
+
+  <div class="sheet-view" data-view="main">
+    <div class="sheet-head">
+      <h2 id="appearance-title">Aparência</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="setting">
+      <span class="setting-label" id="lbl-size">Tamanho do texto</span>
+      <div class="size-stepper" role="group" aria-labelledby="lbl-size">
+        <button id="size-down" class="size-btn size-down" aria-label="Diminuir texto">A</button>
+        <span id="size-dots" class="size-dots" role="img"></span>
+        <button id="size-up" class="size-btn size-up" aria-label="Aumentar texto">A</button>
+      </div>
+    </div>
+
+    <div class="setting-pair">
+      <div class="setting">
+        <span class="setting-label" id="lbl-font">Fonte</span>
+        <div class="segmented" role="group" aria-labelledby="lbl-font">
+          <button data-font="serif" class="font-serif" aria-label="Serifada">Aa</button>
+          <button data-font="sans" class="font-sans" aria-label="Sem serifa">Aa</button>
+        </div>
+      </div>
+      <div class="setting">
+        <span class="setting-label" id="lbl-spacing">Espaçamento</span>
+        <div class="segmented" role="group" aria-labelledby="lbl-spacing">
+          <button data-spacing="1.4" aria-label="Compacto" title="Compacto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
+          <button data-spacing="1.7" aria-label="Normal" title="Normal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h14"/></svg></button>
+          <button data-spacing="2" aria-label="Amplo" title="Amplo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14M5 12h14M5 19.5h14"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting">
+      <span class="setting-label" id="lbl-theme">Tema</span>
+      <div class="theme-cards" role="group" aria-labelledby="lbl-theme">
+        <button data-theme-choice="light"><span class="theme-thumb thumb-light" aria-hidden="true"></span>Claro</button>
+        <button data-theme-choice="dark"><span class="theme-thumb thumb-dark" aria-hidden="true"></span>Escuro</button>
+        <button data-theme-choice="system"><span class="theme-thumb thumb-system" aria-hidden="true"></span>Sistema</button>
+      </div>
+    </div>
+
+    <div class="setting">
+      <span class="setting-label" id="lbl-mark">Cor da marca “parei aqui”</span>
+      <div class="swatches" role="group" aria-labelledby="lbl-mark">
+        <button class="swatch" data-color="amber" aria-label="Âmbar"></button>
+        <button class="swatch" data-color="green" aria-label="Verde"></button>
+        <button class="swatch" data-color="blue" aria-label="Azul"></button>
+        <button class="swatch" data-color="pink" aria-label="Rosa"></button>
+        <button class="swatch" data-color="purple" aria-label="Roxo"></button>
+      </div>
+    </div>
+
+    <div class="setting-rows">
+      <button class="setting-row" data-goto="languages">
+        <span>Traduzir para</span>
+        <span class="row-value"><span id="lang-current"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <button class="setting-row" data-goto="storage">
+        <span>Armazenamento e diagnóstico</span>
+        <span class="row-value"><span id="storage-short"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <!-- No celular o indicador "Traduzindo N%" não cabe no topo: cancelar fica aqui. -->
+      <button class="setting-row cancel-row" id="appearance-cancel">
+        <span>Cancelar tradução</span>
+      </button>
+    </div>
   </div>
 
-  <div class="settings">
-    <label class="field">
-      <span>Tamanho da fonte <output id="out-font-size"></output></span>
-      <input type="range" id="set-font-size" min="14" max="28" step="1">
-    </label>
+  <div class="sheet-view" data-view="languages" hidden>
+    <div class="sheet-head">
+      <button class="icon-btn" data-goto="main" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <h2>Traduzir para</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="choice-list" role="group" aria-label="Idioma da tradução">
+      <button data-lang="pt-BR">Português (Brasil)</button>
+      <button data-lang="pt-PT">Português (Portugal)</button>
+      <button data-lang="es">Espanhol</button>
+      <button data-lang="fr">Francês</button>
+      <button data-lang="de">Alemão</button>
+      <button data-lang="it">Italiano</button>
+    </div>
+  </div>
 
-    <label class="field">
-      <span>Altura da linha <output id="out-line-height"></output></span>
-      <input type="range" id="set-line-height" min="1.3" max="2.2" step="0.1">
-    </label>
-
-    <label class="field">
-      <span>Fonte</span>
-      <select id="set-font-family">
-        <option value="serif">Serifada</option>
-        <option value="sans">Sem serifa</option>
-      </select>
-    </label>
-
-    <label class="field">
-      <span>Cor do marcador "parei aqui"</span>
-      <select id="set-mark-color">
-        <option value="amber">Âmbar</option>
-        <option value="green">Verde</option>
-        <option value="blue">Azul</option>
-        <option value="pink">Rosa</option>
-        <option value="purple">Roxo</option>
-      </select>
-      <span class="mark-preview" aria-hidden="true">Assim ficará a linha marcada.</span>
-    </label>
-
-    <label class="field">
-      <span>Tema</span>
-      <select id="set-theme">
-        <option value="system">Seguir o sistema</option>
-        <option value="light">Claro</option>
-        <option value="dark">Escuro</option>
-      </select>
-    </label>
-
-    <label class="field">
-      <span>Traduzir para</span>
-      <select id="set-target-lang">
-        <option value="pt-BR">Português (Brasil)</option>
-        <option value="pt-PT">Português (Portugal)</option>
-        <option value="es">Espanhol</option>
-        <option value="fr">Francês</option>
-        <option value="de">Alemão</option>
-        <option value="it">Italiano</option>
-      </select>
-    </label>
-
-    <div class="field">
-      <span>Armazenamento</span>
-      <p id="storage-info" class="muted small">—</p>
-      <button id="btn-clear-cache" class="text-btn">Limpar cache de traduções deste livro</button>
+  <div class="sheet-view" data-view="storage" hidden>
+    <div class="sheet-head">
+      <button class="icon-btn" data-goto="main" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <h2>Armazenamento e diagnóstico</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p id="storage-info" class="storage-info">—</p>
+    <div class="setting-rows">
+      <button class="setting-row" id="btn-clear-cache"><span>Limpar cache de traduções deste livro</span></button>
+      <button class="setting-row" id="appearance-copy-diagnostic"><span>Copiar diagnóstico</span></button>
     </div>
   </div>
 </dialog>

@@ -15,7 +15,7 @@ const KEYS = {
 };
 
 export const DEFAULT_PREFS = {
-  fontSize: 18,
+  fontSize: null,        // null: padrão do aparelho (19px, 18px no celular)
   lineHeight: 1.7,
   theme: 'system',       // 'light' | 'dark' | 'system'
   targetLang: 'pt-BR',
