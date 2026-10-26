@@ -12,6 +12,31 @@
 
 <a class="skip-link" href="#viewport">Pular para o conteúdo</a>
 
+<!-- Biblioteca: tela própria, por cima da leitura (que continua montada por
+     baixo, para voltar ao livro aberto sem reabri-lo). -->
+<section id="welcome" class="library-view" aria-label="Biblioteca">
+  <header class="library-header">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6.5c3-2 6.5-2 9-1v13c-2.5-1-6-1-9 1-3-2-6.5-2-9-1z"/><path d="M12 6.5v13"/></svg>
+      <span>EPUB Reader</span>
+    </div>
+    <h1 class="library-title">Biblioteca</h1>
+    <div class="library-actions">
+      <button class="icon-btn aa-btn" data-action="appearance" aria-label="Aparência" title="Aparência">Aa</button>
+      <label class="add-btn" title="Adicionar livro">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="add-label">Adicionar livro</span>
+        <input type="file" id="file-input" class="epub-input sr-only" accept=".epub,application/epub+zip" aria-label="Adicionar livro">
+      </label>
+    </div>
+  </header>
+  <div id="library" class="library"></div>
+  <footer class="library-note">
+    <span class="note-long">Seus livros, marcas e progresso ficam só neste navegador. Apenas o texto que você traduz é enviado ao serviço de tradução.</span>
+    <span class="note-short">Seus livros ficam só neste navegador.</span>
+  </footer>
+</section>
+
 <header class="app-header">
   <div class="header-start">
     <button id="btn-sidebar" class="icon-btn" aria-label="Abrir sumário" aria-expanded="false" title="Sumário">
@@ -58,6 +83,10 @@
   <a role="menuitem" href="https://github.com/FabioTrindade/epub-reader#como-usar" target="_blank" rel="noopener">Ajuda</a>
 </div>
 
+<div id="menu-book" class="menu" role="menu" aria-label="Opções do livro" hidden>
+  <button role="menuitem" id="menu-remove-book" class="is-destructive">Remover livro</button>
+</div>
+
 <div id="menu-translate" class="menu" role="menu" aria-label="Tradução em andamento" hidden>
   <button role="menuitem" id="btn-cancel-translate">Cancelar tradução</button>
 </div>
@@ -90,19 +119,6 @@
       <span>Voltar para onde parei</span>
     </button>
 
-    <section id="welcome" class="welcome">
-      <div class="drop-zone" id="drop-zone">
-        <svg viewBox="0 0 24 24" aria-hidden="true" class="drop-icon"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-        <h2>Abra um livro em EPUB</h2>
-        <p class="muted">Arraste o arquivo aqui ou escolha no seu computador.<br>
-          Nada é enviado para servidor: o livro é lido e guardado no seu navegador.</p>
-        <label class="primary-btn">
-          Escolher arquivo
-          <input type="file" id="file-input" accept=".epub,application/epub+zip" hidden>
-        </label>
-      </div>
-      <div id="library" class="library"></div>
-    </section>
   </main>
 </div>
 
@@ -265,6 +281,19 @@
     </div>
   </div>
 </dialog>
+
+<!-- Confirmação de ações (remover livro): título, texto curto e dois botões. -->
+<dialog id="dlg-confirm" class="confirm" aria-labelledby="confirm-title">
+  <h2 id="confirm-title"></h2>
+  <p id="confirm-text"></p>
+  <div class="confirm-actions">
+    <button class="text-btn" value="cancel" data-close>Cancelar</button>
+    <button class="confirm-ok" id="confirm-ok"></button>
+  </div>
+</dialog>
+
+<!-- Arrastar um arquivo para qualquer lugar da janela. -->
+<div id="drop-overlay" class="drop-overlay" hidden><span>Solte para abrir</span></div>
 
 <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
 

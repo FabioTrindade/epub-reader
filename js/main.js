@@ -8,7 +8,7 @@ import { Reader } from './reader.js';
 import * as storage from './storage.js';
 import * as db from './db.js';
 import {
-  $, applyPrefs, toast, wireDialogs,
+  $, applyPrefs, toast, wireDialogs, confirmDialog,
   NotificationUI, SidebarUI, LibraryUI, AppearanceUI, PopoverMenu,
 } from './ui.js';
 
@@ -40,7 +40,11 @@ function init() {
       reader.refreshBookmarks();
     }
   );
-  library = new LibraryUI(openFromLibrary, deleteBook);
+  library = new LibraryUI({
+    onOpen: openFromLibrary,
+    onContinue: continueReading,
+    onDelete: deleteBook,
+  });
   settings = new AppearanceUI({
     onChange: onPrefChange,
     onClearCache: clearTranslationCache,
@@ -62,22 +66,40 @@ function init() {
 /* --------------------------------- abertura -------------------------------- */
 
 function wireFileInput() {
-  $('#file-input').addEventListener('change', (ev) => {
+  // Há vários campos (topo, card tracejado, estado vazio), e a biblioteca
+  // recria os seus a cada desenho: um ouvinte só, no documento.
+  document.addEventListener('change', (ev) => {
+    if (!ev.target.matches?.('.epub-input')) return;
     const file = ev.target.files?.[0];
     if (file) handleFile(file);
     ev.target.value = ''; // permite reabrir o mesmo arquivo
   });
 
-  const zone = $('#drop-zone');
-  for (const type of ['dragenter', 'dragover']) {
-    zone.addEventListener(type, (ev) => { ev.preventDefault(); zone.classList.add('is-over'); });
-  }
-  for (const type of ['dragleave', 'drop']) {
-    zone.addEventListener(type, () => zone.classList.remove('is-over'));
-  }
-  zone.addEventListener('drop', (ev) => {
+  // Arrastar um arquivo para qualquer lugar da janela. dragenter/dragleave
+  // disparam a cada elemento cruzado, daí o contador.
+  const overlay = $('#drop-overlay');
+  const hasFiles = (ev) => [...(ev.dataTransfer?.types || [])].includes('Files');
+  let depth = 0;
+  document.addEventListener('dragenter', (ev) => {
+    if (!hasFiles(ev)) return;
     ev.preventDefault();
-    const file = ev.dataTransfer?.files?.[0];
+    depth += 1;
+    overlay.hidden = false;
+  });
+  document.addEventListener('dragover', (ev) => {
+    if (hasFiles(ev)) ev.preventDefault();
+  });
+  document.addEventListener('dragleave', (ev) => {
+    if (!hasFiles(ev)) return;
+    depth = Math.max(0, depth - 1);
+    if (!depth) overlay.hidden = true;
+  });
+  document.addEventListener('drop', (ev) => {
+    if (!hasFiles(ev)) return;
+    ev.preventDefault();
+    depth = 0;
+    overlay.hidden = true;
+    const file = ev.dataTransfer.files?.[0];
     if (file) handleFile(file);
   });
 }
@@ -100,6 +122,7 @@ async function handleFile(file) {
       return;
     }
 
+    if (!$('#welcome').hidden) library.showImporting(file.name);
     const parsed = await parseEpub(buffer, file);
 
     // Medir agora: o zip já está aberto e o usuário já está esperando. Custa
@@ -145,9 +168,22 @@ async function openBook(record) {
 }
 
 async function openFromLibrary(id) {
+  // O livro aberto continua montado sob a biblioteca: voltar a ele não precisa
+  // reabrir, e o leitor reencontra o capítulo e a rolagem como deixou.
+  if (currentBook?.id === id) {
+    hideLibrary();
+    return;
+  }
   const record = await db.getBook(id);
   if (!record) return;
   await openBook(record);
+}
+
+/** "Continuar de onde parei": abrir já leva ao "parei aqui"; no livro aberto, vai até ele. */
+async function continueReading(id) {
+  const reopening = currentBook?.id !== id;
+  await openFromLibrary(id);
+  if (!reopening) await reader.goToMark();
 }
 
 /** `chapterLengths` (medido na importação) é o que dá o "% do livro" do rodapé. */
@@ -218,7 +254,13 @@ async function restoreLastBook() {
 }
 
 async function deleteBook(book) {
-  if (!confirm(`Remover "${book.title}" e seus dados de leitura?`)) return;
+  const confirmed = await confirmDialog({
+    title: 'Remover livro?',
+    text: `“${book.title}” sai da biblioteca, junto com o progresso, as marcas e as traduções guardadas dele.`,
+    action: 'Remover',
+    destructive: true,
+  });
+  if (!confirmed) return;
 
   await db.deleteBook(book.id);
   await db.clearTranslations(book.id);
@@ -457,6 +499,12 @@ function updateGotoMark() {
 function showLibrary() {
   $('#welcome').hidden = false;
   library.render();
+  updateGotoMark();
+  hideSelectionBar();
+}
+
+function hideLibrary() {
+  $('#welcome').hidden = true;
   updateGotoMark();
 }
 

@@ -69,28 +69,30 @@ const relativeTime = (ts) => {
  * de um menu nativo, sem o peso de um <dialog> modal.
  */
 export class PopoverMenu {
+  /** `trigger` pode ser null: menus de itens dinâmicos (cards) abrem por open(botão). */
   constructor(trigger, menu) {
     this.trigger = trigger;
     this.menu = menu;
 
-    trigger.addEventListener('click', () => (menu.hidden ? this.open() : this.close()));
+    trigger?.addEventListener('click', () => (menu.hidden ? this.open() : this.close()));
     menu.addEventListener('click', (ev) => {
       if (ev.target.closest('[role="menuitem"]')) this.close();
     });
     document.addEventListener('pointerdown', (ev) => {
-      if (!menu.hidden && !menu.contains(ev.target) && !trigger.contains(ev.target)) this.close();
+      if (!menu.hidden && !menu.contains(ev.target) && !this.trigger?.contains(ev.target)) this.close();
     });
     document.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape' && !menu.hidden) {
         this.close();
-        trigger.focus();
+        this.trigger?.focus();
       }
     });
     window.addEventListener('resize', () => this.close());
   }
 
-  open() {
-    const rect = this.trigger.getBoundingClientRect();
+  open(trigger = this.trigger) {
+    this.trigger = trigger;
+    const rect = trigger.getBoundingClientRect();
     this.menu.hidden = false;
     this.menu.style.top = `${rect.bottom + 6}px`;
     // Alinhado pela direita do botão: os gatilhos ficam no canto direito do topo.
@@ -102,8 +104,30 @@ export class PopoverMenu {
   close() {
     if (this.menu.hidden) return;
     this.menu.hidden = true;
-    this.trigger.setAttribute('aria-expanded', 'false');
+    this.trigger?.setAttribute('aria-expanded', 'false');
   }
+}
+
+/** Pergunta antes de uma ação; resolve true se o leitor confirmar. */
+export function confirmDialog({ title, text, action, destructive = false }) {
+  const dialog = $('#dlg-confirm');
+  const ok = $('#confirm-ok');
+  $('#confirm-title').textContent = title;
+  $('#confirm-text').textContent = text;
+  ok.textContent = action;
+  ok.classList.toggle('is-destructive', destructive);
+  dialog.returnValue = '';
+  // showModal foca o primeiro botão, "Cancelar": Enter por engano não apaga nada.
+  dialog.showModal();
+
+  return new Promise((resolve) => {
+    const confirm = () => dialog.close('ok');
+    ok.addEventListener('click', confirm);
+    dialog.addEventListener('close', () => {
+      ok.removeEventListener('click', confirm);
+      resolve(dialog.returnValue === 'ok');
+    }, { once: true });
+  });
 }
 
 export class NotificationUI {
@@ -356,12 +380,89 @@ export class SidebarUI {
 
 /* -------------------------------- biblioteca ------------------------------- */
 
+/** Capa tipográfica para livros sem imagem: seis tons fixos, escolhidos pelo título. */
+const COVER_TONES = [
+  { bg: '#1F2A37', fg: '#F3F4F6', sub: '#C7CBD1' },
+  { bg: '#E9E2D6', fg: '#3B2F22', sub: '#6B5A45' },
+  { bg: '#DCE7E3', fg: '#17352D', sub: '#3D5A51' },
+  { bg: '#E6E1F0', fg: '#2E2343', sub: '#5B4E70' },
+  { bg: '#F3E1D8', fg: '#4A2418', sub: '#7A4A3A' },
+  { bg: '#F2F2EF', fg: '#18181B', sub: '#55555C' },
+];
+
+function hashString(text) {
+  let h = 0;
+  for (const ch of text) h = (h * 31 + ch.codePointAt(0)) | 0;
+  return Math.abs(h);
+}
+
+function readAgo(ts) {
+  if (!ts) return '';
+  const days = Math.floor((Date.now() - ts) / 86_400_000);
+  if (days < 1) return 'lido hoje';
+  if (days === 1) return 'lido ontem';
+  if (days < 7) return `lido há ${days} dias`;
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return `lido há ${weeks} semana${weeks > 1 ? 's' : ''}`;
+  }
+  const months = Math.floor(days / 30);
+  return months < 12 ? `lido há ${months} ${months > 1 ? 'meses' : 'mês'}` : 'lido há mais de um ano';
+}
+
+/** Onde o leitor está num livro, do jeito que a biblioteca mostra. */
+function bookState(book) {
+  const progress = storage.getProgress(book.id);
+  if (!progress) return { started: false };
+
+  const { ratio, exact } = storage.computeProgress(book.chapterLengths, book.chapterCount,
+    progress.chapterIndex, progress.scrollRatio);
+  const percent = Math.round(ratio * 100);
+  // Contar pelo sumário, como a lateral; tocPositions falta em livros
+  // importados antes dele existir, até a próxima abertura preencher.
+  const position = book.tocPositions?.[progress.chapterIndex];
+  const chapter = position != null
+    ? { n: position + 1, of: book.tocPositions.at(-1) + 1 }
+    : { n: progress.chapterIndex + 1, of: book.chapterCount };
+  // O "~" avisa que o livro ainda não foi medido (importado antes da medição).
+  return { started: true, percent, label: `${exact ? '' : '~'}${percent}%`, done: percent >= 99, chapter };
+}
+
+const make = (tag, className, text) => {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text != null) el.textContent = text;
+  return el;
+};
+
+const ICONS = {
+  more: '<svg viewBox="0 0 24 24" aria-hidden="true" class="icon-fill"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/></svg>',
+  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>',
+};
+
+/** Campo de arquivo visualmente escondido, mas alcançável pelo teclado. */
+const fileInput = () => {
+  const input = make('input', 'epub-input sr-only');
+  input.type = 'file';
+  input.accept = '.epub,application/epub+zip';
+  return input;
+};
+
 export class LibraryUI {
-  constructor(onOpenBook, onDeleteBook) {
+  constructor({ onOpen, onContinue, onDelete }) {
+    this.view = $('#welcome');
     this.el = $('#library');
-    this.onOpenBook = onOpenBook;
-    this.onDeleteBook = onDeleteBook;
+    this.onOpen = onOpen;
+    this.onContinue = onContinue;
     this.urls = [];
+
+    this.menu = new PopoverMenu(null, $('#menu-book'));
+    this.menuBook = null;
+    $('#menu-remove-book').addEventListener('click', () => {
+      if (this.menuBook) onDelete(this.menuBook);
+    });
   }
 
   async render() {
@@ -369,116 +470,196 @@ export class LibraryUI {
     this.urls = [];
 
     const books = await db.listBooks();
-    this.el.textContent = '';
-    if (!books.length) return;
-
-    const heading = document.createElement('h3');
-    heading.textContent = 'Meus livros';
-    this.el.append(heading);
-
-    const grid = document.createElement('div');
-    grid.className = 'library-grid';
-
-    for (const book of books) {
-      const card = document.createElement('div');
-      card.className = 'book-card';
-
-      const open = document.createElement('button');
-      open.className = 'book-open';
-
-      const cover = document.createElement('div');
-      cover.className = 'book-cover';
-      open.append(cover);
-
-      if (book.cover) {
-        const url = URL.createObjectURL(book.cover);
-        this.urls.push(url);
-        const img = document.createElement('img');
-        img.src = url;
-        img.alt = '';
-        cover.append(img);
-      } else {
-        const placeholder = document.createElement('div');
-        placeholder.className = 'book-placeholder';
-        placeholder.textContent = book.title.slice(0, 2).toUpperCase();
-        cover.append(placeholder);
-      }
-
-      const meta = document.createElement('div');
-      meta.className = 'book-meta';
-      const t = document.createElement('strong');
-      t.textContent = book.title;
-      const a = document.createElement('span');
-      a.className = 'small muted';
-      a.textContent = book.author;
-      meta.append(t, a);
-
-      const progress = storage.getProgress(book.id);
-      const { ratio, exact } = progress
-        ? storage.computeProgress(book.chapterLengths, book.chapterCount,
-            progress.chapterIndex, progress.scrollRatio)
-        : { ratio: 0, exact: true };
-
-      const percent = Math.round(ratio * 100);
-      const done = percent >= 99;
-
-      // Barra na base da capa: dá para varrer o grid inteiro de relance.
-      if (progress) {
-        const bar = document.createElement('div');
-        bar.className = 'book-bar';
-        if (done) bar.classList.add('is-done');
-        const fill = document.createElement('span');
-        fill.style.width = `${Math.max(percent, 2)}%`;
-        bar.append(fill);
-        cover.append(bar);
-      }
-
-      const p = document.createElement('span');
-      p.className = 'small book-progress';
-
-      if (!progress) {
-        p.classList.add('muted', 'is-single');
-        p.textContent = 'Não iniciado';
-      } else {
-        if (done) p.classList.add('is-done');
-
-        // Capítulo à esquerda, percentual à direita: onde estou e quanto já li.
-        const chapter = document.createElement('span');
-        chapter.className = 'book-chapter';
-        // Contar pelo sumário, como a lateral; tocPositions falta em livros
-        // importados antes dele existir, até a próxima abertura preencher.
-        const position = book.tocPositions?.[progress.chapterIndex];
-        chapter.textContent = position != null
-          ? `Capítulo ${position + 1} de ${book.tocPositions.at(-1) + 1}`
-          : `Capítulo ${progress.chapterIndex + 1} de ${book.chapterCount}`;
-        // Em cards estreitos o texto trunca e "de N" é o primeiro a sumir.
-        chapter.title = chapter.textContent;
-
-        const pct = document.createElement('span');
-        pct.className = 'book-percent';
-        // O "~" avisa que a medição do livro ainda não existe (importado antes).
-        pct.textContent = `${exact ? '' : '~'}${percent}%`;
-
-        p.append(chapter, pct);
-        if (!exact) p.title = 'Percentual aproximado até a próxima abertura do livro';
-      }
-
-      meta.append(p);
-
-      open.append(meta);
-      open.addEventListener('click', () => this.onOpenBook(book.id));
-
-      const del = document.createElement('button');
-      del.className = 'icon-btn small-btn book-delete';
-      del.setAttribute('aria-label', `Remover ${book.title}`);
-      del.textContent = '×';
-      del.addEventListener('click', () => this.onDeleteBook(book));
-
-      card.append(open, del);
-      grid.append(card);
+    this.view.classList.toggle('is-empty', !books.length);
+    if (!books.length) {
+      this.el.replaceChildren(this.#empty());
+      return;
     }
 
-    this.el.append(grid);
+    const items = books.map((book) => ({ book, state: bookState(book) }));
+    // A lista vem do último aberto para o primeiro: o primeiro iniciado e não
+    // concluído é o "continuar lendo".
+    const current = items.find(({ state }) => state.started && !state.done);
+    this.el.replaceChildren(...[current && this.#continue(current), this.#shelf(items)].filter(Boolean));
+  }
+
+  /** Mostra um card "Importando…" enquanto um livro novo é lido. */
+  showImporting(name) {
+    const grid = this.el.querySelector('.shelf-grid');
+    if (!grid) return;
+    const card = make('article', 'book-card is-importing');
+    const cover = make('div', 'cover is-skeleton');
+    const info = make('span', 'book-info');
+    info.append(make('span', 'book-title', name.replace(/\.epub$/i, '')), make('span', 'book-state', 'Importando…'));
+    card.append(cover, info);
+    grid.prepend(card);
+  }
+
+  #cover(book) {
+    const cover = make('div', 'cover');
+    if (book.cover) {
+      const url = URL.createObjectURL(book.cover);
+      this.urls.push(url);
+      const img = make('img');
+      img.src = url;
+      img.alt = '';
+      cover.append(img);
+      return cover;
+    }
+    const tone = COVER_TONES[hashString(book.title || '') % COVER_TONES.length];
+    cover.classList.add('is-typographic');
+    cover.style.setProperty('--cover-bg', tone.bg);
+    cover.style.setProperty('--cover-fg', tone.fg);
+    cover.style.setProperty('--cover-sub', tone.sub);
+    cover.append(make('span', 'cover-title', book.title), make('span', 'cover-author', book.author));
+    return cover;
+  }
+
+  #bar(percent, label) {
+    const row = make('span', 'progress-row');
+    const bar = make('span', 'bar');
+    const fill = make('span');
+    fill.style.width = `${percent}%`;
+    bar.append(fill);
+    row.append(bar, make('span', 'progress-label', label));
+    return row;
+  }
+
+  #continue({ book, state }) {
+    const section = make('section', 'continue');
+    section.setAttribute('aria-labelledby', 'continue-label');
+    const label = make('h2', 'section-label', 'Continuar lendo');
+    label.id = 'continue-label';
+
+    const card = make('div', 'continue-card');
+    const body = make('div', 'continue-body');
+    const head = make('div', 'continue-head');
+    head.append(
+      make('span', 'section-label card-label', 'Continuar lendo'),
+      make('span', 'continue-title', book.title),
+      make('span', 'continue-meta meta-long',
+        [book.author, `Capítulo ${state.chapter.n}`, readAgo(book.lastOpenedAt)].filter(Boolean).join(' · ')),
+      make('span', 'continue-meta meta-short', `Capítulo ${state.chapter.n} de ${state.chapter.of}`),
+    );
+    body.append(head);
+
+    // A frase marcada como "parei aqui", na cor da marca: é o que lembra o leitor
+    // de onde estava, melhor que um número de capítulo.
+    const mark = storage.getReadingMark(book.id);
+    if (mark?.excerpt) {
+      const quote = make('p', 'continue-quote');
+      quote.append(make('mark', 'reading-mark', mark.excerpt), ' …');
+      body.append(quote);
+    }
+
+    body.append(this.#bar(state.percent, state.label));
+    const go = make('button', 'continue-btn', 'Continuar de onde parei');
+    go.addEventListener('click', () => this.onContinue(book.id));
+    body.append(go);
+
+    card.append(this.#cover(book), body);
+    section.append(label, card);
+    return section;
+  }
+
+  #shelf(items) {
+    const section = make('section', 'shelf');
+    section.setAttribute('aria-labelledby', 'shelf-label');
+    const head = make('div', 'shelf-head');
+    const title = make('h2', 'section-label');
+    title.id = 'shelf-label';
+    const count = items.length === 1 ? '1 livro' : `${items.length} livros`;
+    title.append(make('span', 'label-long', `Sua biblioteca · ${count}`), make('span', 'label-short', 'Todos os livros'));
+    head.append(title);
+
+    const grid = make('div', 'shelf-grid');
+
+    // Busca só aparece quando a lista já não cabe de relance.
+    if (items.length >= 6) {
+      const search = make('label', 'shelf-search');
+      search.innerHTML = ICONS.search;
+      const input = make('input');
+      input.type = 'search';
+      input.placeholder = 'Buscar título ou autor';
+      input.setAttribute('aria-label', 'Buscar na biblioteca');
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        for (const card of grid.querySelectorAll('.book-card')) {
+          card.hidden = Boolean(q) && !card.dataset.search.includes(q);
+        }
+      });
+      search.append(input);
+      head.append(search);
+    }
+
+    for (const item of items) grid.append(this.#card(item));
+
+    const add = make('label', 'add-card');
+    add.innerHTML = `${ICONS.upload}<span class="add-long">Arraste um .epub<br>ou clique para escolher</span><span class="add-short">Abrir um arquivo .epub</span>`;
+    add.append(fileInput());
+    grid.append(add);
+
+    section.append(head, grid);
+    return section;
+  }
+
+  #card({ book, state }) {
+    const card = make('article', 'book-card');
+    card.dataset.search = `${book.title} ${book.author}`.toLowerCase();
+
+    const open = make('button', 'book-open');
+    const info = make('span', 'book-info');
+    info.append(make('span', 'book-title', book.title), make('span', 'book-author', book.author));
+
+    if (!state.started) {
+      info.append(make('span', 'book-state', 'Não iniciado'));
+    } else if (state.done) {
+      const done = make('span', 'book-state is-done');
+      done.innerHTML = ICONS.check;
+      done.append('Concluído');
+      info.append(done);
+    } else {
+      const progress = this.#bar(state.percent, state.label);
+      progress.classList.add('book-state');
+      progress.title = `Capítulo ${state.chapter.n} de ${state.chapter.of}`;
+      info.append(progress);
+    }
+
+    open.append(this.#cover(book), info);
+    open.addEventListener('click', () => this.onOpen(book.id));
+
+    const more = make('button', 'icon-btn book-more');
+    more.innerHTML = ICONS.more;
+    more.setAttribute('aria-label', `Opções de ${book.title}`);
+    more.setAttribute('aria-haspopup', 'menu');
+    more.setAttribute('aria-expanded', 'false');
+    more.addEventListener('click', () => {
+      if (!this.menu.menu.hidden && this.menu.trigger === more) return this.menu.close();
+      this.menuBook = book;
+      this.menu.open(more);
+    });
+
+    card.append(open, more);
+    return card;
+  }
+
+  /** Primeira abertura: nenhum livro ainda. */
+  #empty() {
+    const wrap = make('div', 'library-empty');
+    const drop = make('label', 'empty-drop');
+    drop.innerHTML = ICONS.upload;
+    drop.append(
+      make('strong', null, 'Abra um livro em EPUB'),
+      make('span', 'empty-text', 'Arraste o arquivo para cá ou escolha no seu computador. Nada é enviado para servidor: o livro é lido e guardado no seu navegador.'),
+      make('span', 'primary-btn', 'Escolher arquivo'),
+      fileInput(),
+    );
+    const link = make('a', 'empty-link', 'Onde encontrar livros gratuitos');
+    link.href = 'https://github.com/FabioTrindade/epub-reader#onde-encontrar-livros-gratuitos';
+    link.target = '_blank';
+    link.rel = 'noopener';
+    wrap.append(drop, link);
+    return wrap;
   }
 }
 
