@@ -64,9 +64,14 @@ export function getProgress(bookId) {
   return read(KEYS.progress, {})[bookId] || null;
 }
 
-export function setProgress(bookId, { chapterIndex, scrollRatio }) {
+/**
+ * `chapterTitle` é o título da entrada do sumário: a biblioteca mostra onde o
+ * leitor está sem reabrir o livro. Contar entradas ("Capítulo 12 de 29")
+ * mentiria, porque capa, prefácio e partes também são entradas.
+ */
+export function setProgress(bookId, { chapterIndex, scrollRatio, chapterTitle = '' }) {
   const all = read(KEYS.progress, {});
-  all[bookId] = { chapterIndex, scrollRatio, updatedAt: Date.now() };
+  all[bookId] = { chapterIndex, scrollRatio, chapterTitle, updatedAt: Date.now() };
   write(KEYS.progress, all);
 }
 

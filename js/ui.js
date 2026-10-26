@@ -453,14 +453,15 @@ function bookState(book) {
   const { ratio, exact } = storage.computeProgress(book.chapterLengths, book.chapterCount,
     progress.chapterIndex, progress.scrollRatio);
   const percent = Math.round(ratio * 100);
-  // Contar pelo sumário, como a lateral; tocPositions falta em livros
-  // importados antes dele existir, até a próxima abertura preencher.
-  const position = book.tocPositions?.[progress.chapterIndex];
-  const chapter = position != null
-    ? { n: position + 1, of: book.tocPositions.at(-1) + 1 }
-    : { n: progress.chapterIndex + 1, of: book.chapterCount };
+  // O capítulo vai pelo título, como no rodapé da leitura. Progresso gravado
+  // antes de o título ser guardado usa o do "parei aqui", se for o mesmo
+  // capítulo; sem nenhum dos dois, a biblioteca mostra só o percentual.
+  const mark = storage.getReadingMark(book.id);
+  const chapterTitle = progress.chapterTitle
+    || (mark?.chapterIndex === progress.chapterIndex ? mark.chapterTitle : '')
+    || '';
   // O "~" avisa que o livro ainda não foi medido (importado antes da medição).
-  return { started: true, percent, label: `${exact ? '' : '~'}${percent}%`, done: percent >= 99, chapter };
+  return { started: true, percent, label: `${exact ? '' : '~'}${percent}%`, done: percent >= 99, chapterTitle };
 }
 
 const make = (tag, className, text) => {
@@ -573,8 +574,8 @@ export class LibraryUI {
       make('span', 'section-label card-label', 'Continuar lendo'),
       make('span', 'continue-title', book.title),
       make('span', 'continue-meta meta-long',
-        [book.author, `Capítulo ${state.chapter.n}`, readAgo(book.lastOpenedAt)].filter(Boolean).join(' · ')),
-      make('span', 'continue-meta meta-short', `Capítulo ${state.chapter.n} de ${state.chapter.of}`),
+        [book.author, state.chapterTitle, readAgo(book.lastOpenedAt)].filter(Boolean).join(' · ')),
+      make('span', 'continue-meta meta-short', state.chapterTitle || readAgo(book.lastOpenedAt)),
     );
     body.append(head);
 
@@ -656,7 +657,7 @@ export class LibraryUI {
     } else {
       const progress = this.#bar(state.percent, state.label);
       progress.classList.add('book-state');
-      progress.title = `Capítulo ${state.chapter.n} de ${state.chapter.of}`;
+      if (state.chapterTitle) progress.title = state.chapterTitle;
       info.append(progress);
     }
 

@@ -289,7 +289,7 @@ function wireReaderEvents() {
   reader.addEventListener('chapter-loaded', (ev) => {
     const { chapter, index } = ev.detail;
     const total = currentBook.chapters.length;
-    renderSubtitle(chapter.title || `Capítulo ${chapter.tocPosition + 1}`);
+    renderSubtitle(chapter.title || '');
     sidebar.highlight(index);
     $('#btn-prev').disabled = index === 0;
     $('#btn-next').disabled = index === total - 1;
@@ -404,21 +404,33 @@ function renderSubtitle(chapterTitle = '') {
 }
 
 /**
- * Rodapé: "Capítulo 7 de 146 · 2% do livro" e a barra. O capítulo conta pela
- * lateral, como a biblioteca; o percentual, por volume de texto.
+ * Rodapé: "Chapter 1: The Problem with Org Charts · 7% do livro" e a barra.
+ *
+ * O capítulo vai pelo título, o mesmo do item aceso na lateral. Um número
+ * ("Capítulo 12 de 29") contaria entradas do sumário — capa, prefácio, partes —
+ * e contradiria a numeração do próprio livro. O percentual é por volume de texto.
  */
 function updateReadingProgress(scrollRatio) {
   const chapter = reader.chapter;
   if (!currentBook || !chapter) return;
 
-  const position = chapter.tocPosition + 1;
   const { ratio, exact } = storage.computeProgress(
     currentBook.chapterLengths, currentBook.chapters.length, reader.chapterIndex, scrollRatio);
   // O "~" avisa que o livro ainda não foi medido (importado antes da medição).
-  const percent = `${exact ? '' : '~'}${Math.round(ratio * 100)}%`;
+  const percent = `${exact ? '' : '~'}${Math.round(ratio * 100)}% do livro`;
 
-  $('#chapter-label').textContent = `Capítulo ${position} de ${currentBook.tocCount} · ${percent} do livro`;
-  $('#chapter-label-short').textContent = `Cap. ${position} de ${currentBook.tocCount} · ${percent}`;
+  // Título e percentual em partes separadas: o título encurta com "…", o
+  // percentual nunca some.
+  const title = document.createElement('span');
+  title.className = 'label-title';
+  title.textContent = chapter.title || '';
+  const pct = document.createElement('span');
+  pct.className = 'label-pct';
+  pct.textContent = chapter.title ? ` · ${percent}` : percent;
+  $('#chapter-label').replaceChildren(title, pct);
+  $('#chapter-label').title = chapter.title || '';
+  // No celular o título já está no topo; o rodapé fica só com o percentual.
+  $('#chapter-label-short').textContent = percent;
   $('#reading-progress').style.width = `${ratio * 100}%`;
 }
 

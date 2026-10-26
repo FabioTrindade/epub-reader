@@ -130,7 +130,7 @@ export class Reader extends EventTarget {
       else this.#restoreScroll(scrollRatio);
     });
 
-    storage.setProgress(this.book.id, { chapterIndex: clamped, scrollRatio });
+    storage.setProgress(this.book.id, { chapterIndex: clamped, scrollRatio, chapterTitle: chapter.title });
     db.touchBook(this.book.id);
 
     // applyViewMode acima já dispara a tradução quando o modo não é "original";
@@ -335,6 +335,7 @@ export class Reader extends EventTarget {
     storage.setProgress(this.book.id, {
       chapterIndex: this.chapterIndex,
       scrollRatio: this.scrollRatio,
+      chapterTitle: this.chapter?.title || '',
     });
   }
 

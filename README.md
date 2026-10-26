@@ -111,8 +111,8 @@ No alto fica o livro que você está lendo, com a frase onde parou e o botão
 de cada um: o percentual é calculado pela quantidade de texto, não pelo número
 de capítulos, então "50%" quer dizer metade do livro de verdade. Livro
 terminado aparece como "Concluído", e livro que você nunca abriu, como "Não
-iniciado". O rodapé da leitura mostra o mesmo número: "Capítulo 7 de 146 · 2%
-do livro".
+iniciado". O rodapé da leitura mostra o capítulo e o mesmo número:
+"CHAPTER 1. Loomings. · 2% do livro".
 
 Para tirar um livro da biblioteca, use o menu **⋯** no card e escolha
 **Remover livro**. Isso apaga também o progresso, as marcas e as traduções
