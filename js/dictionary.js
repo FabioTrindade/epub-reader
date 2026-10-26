@@ -77,8 +77,9 @@ export class DictionaryPopup {
   /** Liga o dicionário a um container de capítulo. */
   attach(container) {
     container.addEventListener('click', (ev) => {
-      // Links têm navegação própria; não roubamos o clique deles.
-      if (ev.target.closest('a')) return;
+      // Links têm navegação própria; não roubamos o clique deles. O cabeçalho
+      // das colunas é rótulo do app, não texto do livro.
+      if (ev.target.closest('a, .columns-head')) return;
 
       // Arrastar para selecionar termina com um click: abrir o dicionário aqui
       // atropelaria a seleção que o usuário acabou de fazer.

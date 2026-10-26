@@ -15,6 +15,16 @@ import { readSelection, rangeFromOffsets, wrapRange, unwrap } from './text-range
 import * as storage from './storage.js';
 import * as db from './db.js';
 
+/** "en" → "Inglês", "pt-BR" → "Português (Brasil)", para os cabeçalhos das colunas. */
+function languageName(code) {
+  try {
+    const name = new Intl.DisplayNames(['pt-BR'], { type: 'language' }).of(code);
+    return name ? name[0].toUpperCase() + name.slice(1) : code;
+  } catch {
+    return code;
+  }
+}
+
 export class Reader extends EventTarget {
   #renderer = new ChapterRenderer();
   #translator = null;
@@ -94,6 +104,7 @@ export class Reader extends EventTarget {
     );
 
     this.#prepareBilingual(container);
+    this.#addColumnsHead(container);
     this.#dictionary.attach(container);
 
     this.viewport.textContent = '';
@@ -154,6 +165,18 @@ export class Reader extends EventTarget {
       block.dataset.hash = hashText(normalize(orig.textContent));
       block.dataset.blockIndex = index;
     });
+  }
+
+  /** "Inglês · original" | "Português (Brasil) · tradução" — o CSS só mostra no lado a lado. */
+  #addColumnsHead(container) {
+    const head = document.createElement('div');
+    head.className = 'columns-head';
+    const orig = document.createElement('span');
+    orig.textContent = `${languageName(this.book.lang || 'en')} · original`;
+    const trans = document.createElement('span');
+    trans.textContent = `${languageName(this.#translator.targetLang)} · tradução`;
+    head.append(orig, trans);
+    container.prepend(head);
   }
 
   applyViewMode(mode) {

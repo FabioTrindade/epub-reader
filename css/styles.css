@@ -555,24 +555,37 @@ svg.icon-fill { fill: currentColor; stroke: none; }
   flex: 1;
   overflow-y: auto;
   scroll-behavior: smooth;
-  /* O texto ocupa a largura toda; as marcas de margem (.is-marked, .has-bookmark)
-     ficam até 1.5rem à esquerda dele e precisam caber dentro deste padding. */
-  padding: 2rem 2rem 4rem;
+  /* As marcas de margem (.is-marked, fita do trecho salvo) ficam até 32px à
+     esquerda do texto e precisam caber dentro deste padding. */
+  padding: 56px 40px 48px;
 }
 
+/* Uma coluna só lê melhor estreita; lado a lado precisa do dobro. */
 .chapter-content {
+  max-width: 760px;
+  margin: 0 auto;
   font-family: var(--reader-font-family);
   font-size: var(--reader-font-size);
   line-height: var(--reader-line-height);
   hyphens: auto;
 }
+.chapter-content.mode-split { max-width: 1180px; }
 
 .chapter-content h1, .chapter-content h2, .chapter-content h3,
 .chapter-content h4, .chapter-content h5, .chapter-content h6 {
-  line-height: 1.25;
-  margin: 2em 0 .6em;
+  font-weight: 500;
+  letter-spacing: -.01em;
+  line-height: 1.2;
+  margin: 1.6em 0 .7em;
 }
-.chapter-content p { margin: 0 0 1em; }
+/* Em em, para acompanhar o tamanho de texto escolhido: 36px com o padrão de
+   19px no computador. */
+.chapter-content h1, .chapter-content h2 { font-size: 1.9em; }
+.chapter-content h3 { font-size: 1.4em; }
+.chapter-content h4, .chapter-content h5, .chapter-content h6 { font-size: 1.1em; }
+.chapter-content > :first-child,
+.chapter-content > .columns-head + * { margin-top: 0; }
+.chapter-content p { margin: 0 0 28px; }
 .chapter-content img {
   max-width: 100%;
   /* Com o texto em largura total, uma ilustração grande cresceria até não
@@ -613,10 +626,7 @@ svg.icon-fill { fill: currentColor; stroke: none; }
 
 /* ----------------------------- grid bilíngue ------------------------------ */
 
-.tr-trans {
-  color: var(--trans-fg);
-  font-size: .96em;
-}
+.tr-trans { color: var(--trans-fg); }
 .tr-trans:empty { display: none; }
 .tr-trans.is-empty::after {
   content: '—';
@@ -626,16 +636,30 @@ svg.icon-fill { fill: currentColor; stroke: none; }
 .mode-original .tr-trans { display: none; }
 .mode-translated .tr-orig { display: none; }
 
-.mode-split .tr-row {
+/* Cada par original/tradução é uma linha própria do grid: os dois começam
+   sempre na mesma altura, por mais que um seja mais longo que o outro. */
+.mode-split .tr-row,
+.columns-head {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 64px;
   align-items: start;
 }
-.mode-split .tr-trans {
-  padding-left: 1rem;
-  border-left: 2px solid var(--border);
+
+/* "Inglês · original" | "Português (Brasil) · tradução", só no lado a lado. */
+.columns-head {
+  display: none;
+  margin-bottom: 28px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+  hyphens: none;
+  user-select: none;
 }
+.mode-split .columns-head { display: grid; }
 /* Em listas o marcador precisa continuar do lado de fora do grid. */
 .mode-split li.tr-row { display: list-item; }
 .mode-split li.tr-row > .tr-orig,
@@ -719,24 +743,22 @@ mark.reading-mark {
   .mark-pulse { animation: none; outline: 2px solid var(--mark-hue); outline-offset: 2px; }
 }
 
-/* Fita do trecho salvo: pontilhada e em cinza, deliberadamente mais fraca que
-   a barra sólida e colorida do "parei aqui" — são coisas diferentes. */
+/* Trecho salvo: uma fitinha de marcador na margem, na altura da primeira
+   linha. Pequena e azul, diferente da barra na cor do "parei aqui". */
 .tr-row.has-bookmark::after {
   content: '';
   position: absolute;
-  left: -.85rem;
-  top: -.15em;
-  bottom: -.15em;
-  width: 3px;
-  border-radius: 2px;
-  background: repeating-linear-gradient(
-    var(--muted) 0 4px,
-    transparent 4px 8px
-  );
+  left: -28px;
+  top: calc((1lh - 16px) / 2);
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 3h12v18l-6-4.5L6 21z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 3h12v18l-6-4.5L6 21z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 /* Quando o parágrafo tem os dois, a fita sai da frente da barra. */
-.tr-row.is-marked.has-bookmark::after { left: -1.5rem; }
+.tr-row.is-marked.has-bookmark::after { left: -34px; }
 
 /* Botões do rodapé: rótulo em texto, porque dois ícones parecidos lado a lado
    não deixam claro qual faz o quê. */
@@ -1277,9 +1299,9 @@ mark.dict-highlight {
     padding-top: env(safe-area-inset-top, 0px);
     transform: translateX(-100%);
     transition: transform .22s ease;
-    box-shadow: var(--shadow);
   }
-  .sidebar.is-open { transform: translateX(0); }
+  /* Sombra só com o painel aberto: fechado, ela vazava na borda da tela. */
+  .sidebar.is-open { transform: translateX(0); box-shadow: var(--shadow); }
 }
 
 @media (min-width: 1024px) {
@@ -1323,7 +1345,12 @@ mark.dict-highlight {
     border-radius: 0 6px 6px 0;
   }
 
-  .viewport { padding: 1.2rem 1.1rem 3rem; }
+  .viewport { padding: 24px 24px 40px; }
+  .chapter-content p { margin-bottom: 20px; }
+  .chapter-content h1, .chapter-content h2 { font-size: 1.55em; }
+  /* A margem do celular é de 24px: a fitinha encolhe para caber nela. */
+  .tr-row.has-bookmark::after,
+  .tr-row.is-marked.has-bookmark::after { left: -22px; width: 14px; height: 14px; }
   .welcome { padding: 1.2rem 1.1rem 3rem; }
   .toasts { left: 1rem; right: 1rem; max-width: none; }
 
