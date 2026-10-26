@@ -6,6 +6,8 @@
  * milhares de nós por capítulo e deixaria a renderização lenta.
  */
 
+import { enableSheetDrag } from './ui.js';
+
 /** Letras, marcas de acentuação, apóstrofos e hífen interno. */
 const WORD_CHAR = /[\p{L}\p{M}'’\-]/u;
 const EDGE_TRIM = /^[-'’]+|[-'’]+$/g;
@@ -57,8 +59,16 @@ function wordRangeAt(x, y) {
   return { word, range };
 }
 
+const MOBILE = window.matchMedia('(max-width: 768px)');
+const CLOSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+/**
+ * Verbete da palavra clicada: popover junto da palavra no computador, painel
+ * que sobe do rodapé no celular (onde um popover cobriria o próprio texto).
+ */
 export class DictionaryPopup {
   #el = null;
+  #scrim = null;
   #highlight = null;
   #token = 0;
 
@@ -101,7 +111,13 @@ export class DictionaryPopup {
     this.#markWord(range);
 
     const rect = range.getBoundingClientRect();
-    this.#el = this.#build(word);
+    const sheet = MOBILE.matches;
+    this.#el = this.#build(word, sheet);
+    if (sheet) {
+      this.#scrim = document.createElement('div');
+      this.#scrim.className = 'dict-scrim';
+      document.body.append(this.#scrim);
+    }
     document.body.append(this.#el);
     this.#position(rect);
 
@@ -128,30 +144,33 @@ export class DictionaryPopup {
     }
   }
 
-  #build(word) {
+  #build(word, sheet) {
     const el = document.createElement('div');
-    el.className = 'dict-popup';
+    el.className = sheet ? 'dict-popup is-sheet' : 'dict-popup';
     el.setAttribute('role', 'dialog');
     el.setAttribute('aria-label', `Dicionário: ${word}`);
     el.innerHTML = `
+      <span class="sheet-handle" aria-hidden="true"></span>
       <div class="dict-head">
-        <strong class="dict-word"></strong>
-        <button class="dict-close" aria-label="Fechar">&times;</button>
+        <div class="dict-title">
+          <strong class="dict-word"></strong>
+          <span class="dict-translation"></span>
+        </div>
+        <span class="dict-hint">Esc para fechar</span>
+        <button class="dict-close" aria-label="Fechar dicionário">${CLOSE_ICON}</button>
       </div>
-      <div class="dict-body"><div class="dict-loading">Buscando…</div></div>`;
+      <div class="dict-body"><p class="dict-loading">Buscando…</p></div>`;
     el.querySelector('.dict-word').textContent = word;
     el.querySelector('.dict-close').addEventListener('click', () => this.close());
+    if (sheet) enableSheetDrag(el, () => this.close());
     return el;
   }
 
   #renderEntry(entry) {
+    this.#el.querySelector('.dict-translation').textContent = entry.translation || '—';
+
     const body = this.#el.querySelector('.dict-body');
     body.textContent = '';
-
-    const main = document.createElement('p');
-    main.className = 'dict-translation';
-    main.textContent = entry.translation || '—';
-    body.append(main);
 
     for (const group of entry.entries || []) {
       if (!group.terms?.length) continue;
@@ -162,9 +181,15 @@ export class DictionaryPopup {
       pos.className = 'dict-pos';
       pos.textContent = group.pos || '';
 
-      const terms = document.createElement('span');
+      // Um <span> por sentido: no computador o CSS junta com vírgulas, no
+      // celular cada um vira um chip.
+      const terms = document.createElement('div');
       terms.className = 'dict-terms';
-      terms.textContent = group.terms.join(', ');
+      for (const term of group.terms) {
+        const chip = document.createElement('span');
+        chip.textContent = term;
+        terms.append(chip);
+      }
 
       row.append(pos, terms);
       body.append(row);
@@ -192,12 +217,12 @@ export class DictionaryPopup {
   /** Abre abaixo da palavra; se não couber, acima. Sempre dentro da viewport. */
   #position(rect) {
     const el = this.#el;
-    if (!el) return;
+    if (!el || el.classList.contains('is-sheet')) return;
 
     const margin = 8;
     const { width, height } = el.getBoundingClientRect();
 
-    let left = rect.left + rect.width / 2 - width / 2;
+    let left = rect.left - 24;
     left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
 
     let top = rect.bottom + margin;
@@ -214,6 +239,8 @@ export class DictionaryPopup {
     this.#token++;
     this.#el?.remove();
     this.#el = null;
+    this.#scrim?.remove();
+    this.#scrim = null;
 
     if (this.#highlight) {
       // Desfaz o <mark> e reconstitui o nó de texto.

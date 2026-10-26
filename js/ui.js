@@ -619,7 +619,7 @@ export function placePopover(dialog, anchor) {
 }
 
 /** No celular, o painel fecha arrastando a alça para baixo. */
-export function enableSheetDrag(sheet) {
+export function enableSheetDrag(sheet, onClose = () => sheet.close()) {
   const handle = sheet.querySelector('.sheet-handle');
   if (!handle) return;
   let startY = null;
@@ -639,7 +639,7 @@ export function enableSheetDrag(sheet) {
     startY = null;
     sheet.style.transition = '';
     sheet.style.transform = '';
-    if (dragged > 80) sheet.close();
+    if (dragged > 80) onClose();
   };
   handle.addEventListener('pointerup', end);
   handle.addEventListener('pointercancel', end);
