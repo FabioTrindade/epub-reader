@@ -1,31 +1,108 @@
 /* ============================================================================
    EPUB Reader — estilos
    Tema por custom properties: paleta clara no :root, escura redefinida tanto
-   por prefers-color-scheme quanto por [data-theme], para o botão vencer nos
-   dois sentidos.
+   por prefers-color-scheme quanto por [data-theme], para a escolha do leitor
+   vencer nos dois sentidos. Valores e nomes seguem docs/DESIGN.md.
    ========================================================================== */
 
+/* --------------------------------- fontes --------------------------------- */
+
+/* Servidas pelo próprio app (licença OFL, em fonts/): carregar do Google
+   Fonts mandaria a cada visita um pedido a terceiros que o leitor não fez. O
+   subconjunto latin-ext só baixa quando o texto usa um caractere dele. */
+@font-face {
+  font-family: 'Literata';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../fonts/literata-latin-opsz-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Literata';
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../fonts/literata-latin-opsz-italic.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Literata';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../fonts/literata-latin-ext-opsz-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Literata';
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('../fonts/literata-latin-ext-opsz-italic.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter-latin-wght-italic.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter-latin-ext-wght-italic.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --------------------------------- tokens --------------------------------- */
+
 :root {
-  --bg: #faf9f7;
-  --surface: #ffffff;
-  --surface-2: #f2f0ec;
-  --fg: #1c1a17;
-  --muted: #6b6560;
-  --border: #e0dcd5;
-  --accent: #8b5e34;
-  --accent-fg: #ffffff;
-  --trans-bg: #f5f2ed;
-  --trans-fg: #3d3a35;
+  --bg: #FBFBFA;
+  --surface: #FFFFFF;
+  --surface-2: #F0F0ED;
+  --fg: #18181B;
+  --muted: #6B6B72;
+  --border: #EAEAE7;
+  /* Uma cor de destaque só: progresso, foco, estado ativo e links. */
+  --accent: #3451B2;
+  --accent-fg: #FFFFFF;
+  --accent-soft: #E6EBFA;
+  --selection: #C9D6FB;
+  --success: #15803D;
+  --trans-bg: transparent;
+  --trans-fg: #4A4A52;
   --info: #4a6fa5;
   --warn: #b07a1e;
   --error: #b3261e;
-  --shadow: 0 6px 24px rgba(28, 26, 23, .12);
+  /* Só em elementos flutuantes: na leitura, nada compete com o texto. */
+  --shadow: 0 12px 32px rgba(24, 24, 27, .12);
 
-  --font-serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Literata', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
   --font-ui: var(--font-sans);
 
-  --reader-font-size: 18px;
+  --reader-font-size: 19px;
   --reader-line-height: 1.7;
   --reader-font-family: var(--font-serif);
 
@@ -36,39 +113,45 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16161a;
-    --surface: #1e1e23;
-    --surface-2: #26262c;
-    --fg: #e8e6e3;
-    --muted: #9b9691;
-    --border: #33333a;
-    --accent: #d2a06a;
-    --accent-fg: #1c1a17;
-    --trans-bg: #232329;
-    --trans-fg: #c9c5c0;
+    --bg: #131316;
+    --surface: #1C1C21;
+    --surface-2: #26262C;
+    --fg: #ECECEE;
+    --muted: #A0A0A8;
+    --border: #26262C;
+    --accent: #9DB2FF;
+    --accent-fg: #131316;
+    --accent-soft: #2A3150;
+    --selection: #34406B;
+    --success: #5CC98A;
+    --trans-fg: #C4C4CA;
     --info: #7da2d9;
     --warn: #e0a942;
     --error: #e5716a;
-    --shadow: 0 6px 24px rgba(0, 0, 0, .45);
+    --shadow: 0 12px 32px rgba(0, 0, 0, .45);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #16161a;
-  --surface: #1e1e23;
-  --surface-2: #26262c;
-  --fg: #e8e6e3;
-  --muted: #9b9691;
-  --border: #33333a;
-  --accent: #d2a06a;
-  --accent-fg: #1c1a17;
-  --trans-bg: #232329;
-  --trans-fg: #c9c5c0;
+  --bg: #131316;
+  --surface: #1C1C21;
+  --surface-2: #26262C;
+  --fg: #ECECEE;
+  --muted: #A0A0A8;
+  --border: #26262C;
+  --accent: #9DB2FF;
+  --accent-fg: #131316;
+  --accent-soft: #2A3150;
+  --selection: #34406B;
+  --success: #5CC98A;
+  --trans-fg: #C4C4CA;
   --info: #7da2d9;
   --warn: #e0a942;
   --error: #e5716a;
-  --shadow: 0 6px 24px rgba(0, 0, 0, .45);
+  --shadow: 0 12px 32px rgba(0, 0, 0, .45);
 }
+
+::selection { background: var(--selection); }
 
 * { box-sizing: border-box; }
 
@@ -88,7 +171,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 14px;
   overflow: hidden;
 }
 
@@ -737,7 +820,7 @@ mark.dict-highlight {
   background: var(--accent);
   transition: width .3s;
 }
-.book-bar.is-done span { background: #3fa76a; }
+.book-bar.is-done span { background: var(--success); }
 .book-placeholder {
   display: grid;
   place-items: center;
@@ -764,7 +847,7 @@ mark.dict-highlight {
 }
 .book-progress.is-single { display: block; }
 .book-progress.muted { color: var(--muted); font-weight: 400; }
-.book-progress.is-done { color: #3fa76a; }
+.book-progress.is-done { color: var(--success); }
 
 /* O capítulo cede espaço primeiro: o percentual nunca deve quebrar linha. */
 .book-chapter {
