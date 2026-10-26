@@ -188,7 +188,7 @@ export class Translator {
           }
           if (isLastAttempt) {
             notify.error('translate-failed', 'Falha ao traduzir',
-              `${err.message}. Os parágrafos afetados seguem no original.`);
+              `${err.message.replace(/\.$/, '')}. Os parágrafos afetados seguem no original.`);
             return chunk.map(([hash]) => [hash, null]);
           }
         }

@@ -296,6 +296,7 @@ function wireReaderEvents() {
     updateReadingProgress(0);
     updateGotoMark();
     updateMarkButton();
+    renderChapterEmpty();
   });
 
   reader.addEventListener('mark-changed', () => {
@@ -354,6 +355,40 @@ function hideTranslating() {
   $('#translate-status').hidden = true;
   $('#translate-line').hidden = true;
   $('#menu-translate').hidden = true;
+}
+
+/**
+ * Página sem nenhum parágrafo (a capa, uma ilustração): em vez de uma coluna
+ * de tradução vazia, um aviso e o caminho para o texto. Fica dentro do
+ * capítulo, então o CSS esconde no modo Original e a próxima carga apaga.
+ */
+function renderChapterEmpty() {
+  const container = reader.container;
+  if (!container || container.querySelector('.tr-row')) return;
+
+  const index = reader.chapterIndex;
+  const lengths = currentBook.chapterLengths;
+  // Com a medição do livro dá para pular direto para o primeiro texto.
+  const next = lengths ? lengths.findIndex((n, i) => i > index && n > 0) : index + 1;
+  const beforeText = lengths ? !lengths.slice(0, index + 1).some((n) => n > 0) : index === 0;
+
+  const note = document.createElement('div');
+  note.className = 'chapter-empty';
+  const text = document.createElement('p');
+  text.textContent = 'Esta página não tem texto para traduzir.';
+  note.append(text);
+
+  if (next > 0 && next < currentBook.chapters.length) {
+    const go = document.createElement('button');
+    go.className = 'text-btn';
+    go.textContent = beforeText ? 'Ir para o primeiro capítulo' : 'Ir para o próximo capítulo';
+    go.addEventListener('click', () => reader.loadChapter(next));
+    note.append(go);
+  }
+  // No topo: numa capa, a ilustração ocuparia a tela e esconderia o aviso.
+  // Sem parágrafos, o cabeçalho "original | tradução" não tem o que rotular.
+  container.querySelector('.columns-head')?.remove();
+  container.prepend(note);
 }
 
 /** "Autor · capítulo" sob o título; no celular só o capítulo cabe. */

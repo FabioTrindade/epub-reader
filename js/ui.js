@@ -33,20 +33,27 @@ export function applyPrefs(prefs) {
 
 /* --------------------------------- toasts --------------------------------- */
 
-const LEVEL_ICON = { info: 'ℹ', warn: '⚠', error: '✕' };
+const MAX_TOASTS = 2;
 
 export function toast(level, title, detail) {
   const el = document.createElement('div');
   el.className = `toast toast-${level}`;
-  el.innerHTML = `<span class="toast-icon">${LEVEL_ICON[level] || 'ℹ'}</span>
-                  <div><strong></strong><p class="small muted"></p></div>`;
+  el.innerHTML = `<span class="toast-dot" aria-hidden="true"></span>
+                  <div><strong></strong><p></p></div>`;
   el.querySelector('strong').textContent = title;
   el.querySelector('p').textContent = detail || '';
-  $('#toasts').append(el);
+  const box = $('#toasts');
+  box.append(el);
+
+  // No máximo dois na tela: o mais antigo cede lugar (continua no sino).
+  const shown = [...box.querySelectorAll('.toast:not(.leaving)')];
+  for (const old of shown.slice(0, -MAX_TOASTS)) old.remove();
 
   setTimeout(() => {
     el.classList.add('leaving');
     el.addEventListener('transitionend', () => el.remove(), { once: true });
+    // Sem transição (movimento reduzido), o transitionend não vem.
+    setTimeout(() => el.remove(), 400);
   }, 5000);
 }
 
@@ -144,6 +151,7 @@ export class NotificationUI {
     });
     $('#btn-copy-diagnostic').addEventListener('click', () => this.copyDiagnostic());
     $('#menu-copy-diagnostic').addEventListener('click', () => this.copyDiagnostic());
+    enableSheetDrag(this.dialog);
 
     notify.addEventListener('change', (ev) => {
       this.refreshBadge();
@@ -181,6 +189,7 @@ export class NotificationUI {
   open() {
     this.render();
     this.dialog.showModal();
+    placePopover(this.dialog, $('#btn-more'));
     // Abrir marca como lidas, mas a lista continua consultável.
     notify.markAllRead();
     this.refreshBadge();
@@ -206,8 +215,8 @@ export class NotificationUI {
       head.className = 'notif-head';
 
       const icon = document.createElement('span');
-      icon.className = 'notif-icon';
-      icon.textContent = LEVEL_ICON[entry.level];
+      icon.className = 'notif-dot';
+      icon.setAttribute('aria-hidden', 'true');
 
       const title = document.createElement('strong');
       title.textContent = entry.title;
@@ -276,6 +285,11 @@ export class SidebarUI {
     for (const btn of this.toggles) btn.addEventListener('click', () => this.toggle());
     this.scrim.addEventListener('click', () => this.close());
 
+    // A partir de 1024px o sumário é uma coluna fixa, que o leitor pode
+    // recolher; a escolha fica salva.
+    this.#setCollapsed(storage.getPrefs().sidebarCollapsed, false);
+    DESKTOP.addEventListener('change', () => this.#syncExpanded());
+
     for (const tab of document.querySelectorAll('.sidebar-tabs button')) {
       tab.addEventListener('click', () => this.#selectTab(tab.dataset.panel));
     }
@@ -299,7 +313,24 @@ export class SidebarUI {
     }
   }
 
-  toggle() { this.el.classList.contains('is-open') ? this.close() : this.open(); }
+  toggle() {
+    if (DESKTOP.matches) this.#setCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+    else if (this.el.classList.contains('is-open')) this.close();
+    else this.open();
+  }
+
+  #setCollapsed(collapsed, save = true) {
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    if (save) storage.setPrefs({ sidebarCollapsed: collapsed });
+    this.#syncExpanded();
+  }
+
+  #syncExpanded() {
+    const expanded = DESKTOP.matches
+      ? !document.body.classList.contains('sidebar-collapsed')
+      : this.el.classList.contains('is-open');
+    for (const btn of this.toggles) btn.setAttribute('aria-expanded', String(expanded));
+  }
 
   open() {
     this.el.classList.add('is-open');
@@ -328,7 +359,7 @@ export class SidebarUI {
       link.textContent = chapter.title || `Capítulo ${chapter.index + 1}`;
       link.addEventListener('click', () => {
         this.onSelectChapter(chapter.index);
-        if (window.matchMedia('(max-width: 1023px)').matches) this.close();
+        if (!DESKTOP.matches) this.close();
       });
       this.tocPanel.append(link);
     }
@@ -350,7 +381,7 @@ export class SidebarUI {
     if (!bookmarks.length) {
       const empty = document.createElement('p');
       empty.className = 'muted empty small';
-      empty.textContent = 'Nenhum marcador ainda. Use o ícone de marcador no rodapé.';
+      empty.textContent = 'Nenhum trecho salvo ainda. Selecione um trecho e toque em Salvar, ou use a tecla B.';
       this.bookmarksPanel.append(empty);
       return;
     }
@@ -359,17 +390,21 @@ export class SidebarUI {
       const item = document.createElement('div');
       item.className = 'bookmark-item';
 
+      // O trecho em si vem primeiro, na fonte do livro; o capítulo, embaixo.
       const go = document.createElement('button');
       go.className = 'bookmark-go';
-      go.innerHTML = `<strong></strong><span class="small muted"></span>`;
-      go.querySelector('strong').textContent = bm.chapterTitle || `Capítulo ${bm.chapterIndex + 1}`;
-      go.querySelector('span').textContent = bm.excerpt || '';
-      go.addEventListener('click', () => this.onSelectBookmark(bm));
+      go.innerHTML = `<span class="bm-excerpt"></span><span class="bm-chapter"></span>`;
+      go.querySelector('.bm-excerpt').textContent = bm.excerpt || '';
+      go.querySelector('.bm-chapter').textContent = bm.chapterTitle || `Capítulo ${bm.chapterIndex + 1}`;
+      go.addEventListener('click', () => {
+        this.onSelectBookmark(bm);
+        if (!DESKTOP.matches) this.close();
+      });
 
       const del = document.createElement('button');
       del.className = 'icon-btn small-btn';
-      del.setAttribute('aria-label', 'Remover marcador');
-      del.textContent = '×';
+      del.setAttribute('aria-label', 'Remover trecho salvo');
+      del.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       del.addEventListener('click', () => this.onRemoveBookmark(bm.id));
 
       item.append(go, del);
@@ -782,6 +817,7 @@ export class AppearanceUI {
 /* ------------------------------ popover e painel ---------------------------- */
 
 const MOBILE = window.matchMedia('(max-width: 768px)');
+const DESKTOP = window.matchMedia('(min-width: 1024px)');
 
 /**
  * No computador, painéis como o "Aa" abrem como popover sob o botão que os

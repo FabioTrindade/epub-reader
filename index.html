@@ -155,16 +155,21 @@
   <button id="sel-copy">Copiar</button>
 </div>
 
-<!-- Notificações: o painel de diagnóstico -->
-<dialog id="dlg-notifications" class="dialog">
-  <div class="dialog-head">
-    <h2>Notificações</h2>
-    <button class="icon-btn" data-close aria-label="Fechar">&times;</button>
-  </div>
-  <div id="notif-list" class="notif-list"></div>
-  <div class="dialog-actions">
-    <button id="btn-copy-diagnostic" class="text-btn">Copiar diagnóstico</button>
-    <button id="btn-clear-notifications" class="text-btn">Limpar</button>
+<!-- Notificações: popover sob o ⋯ no computador, painel no celular. -->
+<dialog id="dlg-notifications" class="sheet notifications" aria-labelledby="notif-title">
+  <span class="sheet-handle" aria-hidden="true"></span>
+  <div class="sheet-view">
+    <div class="sheet-head">
+      <h2 id="notif-title">Notificações</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div id="notif-list" class="notif-list"></div>
+    <div class="notif-actions">
+      <button id="btn-copy-diagnostic" class="text-btn">Copiar diagnóstico</button>
+      <button id="btn-clear-notifications" class="text-btn">Limpar</button>
+    </div>
   </div>
 </dialog>
 

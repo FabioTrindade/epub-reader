@@ -249,26 +249,34 @@ export class Reader extends EventTarget {
         onProgress: (done, total) => this.#emit('translate-progress', { done, total }),
       });
       if (controller.signal.aborted) return;
-      this.#paint(rows, map);
+      this.#paint(rows, map, { final: true });
       this.container.dataset.translated = '1';
       this.#emit('translate-done', {});
     } catch (err) {
       if (err.message === 'ABORTED') return;
+      this.#paint(rows, new Map(), { final: true });
       this.#emit('translate-error', { error: err });
     } finally {
       if (this.#abort === controller) this.#abort = null;
     }
   }
 
-  #paint(rows, map) {
+  /**
+   * Escreve as traduções que chegaram. Com `final`, não vem mais nada para
+   * este capítulo: o que continuar vazio falhou e troca o esqueleto pelo aviso
+   * com "Tentar de novo". Na pintura parcial (só o cache) os vazios ainda
+   * estão a caminho e ficam como esqueleto.
+   */
+  #paint(rows, map, { final = false } = {}) {
     for (const row of rows) {
       const slot = row.querySelector('.tr-trans');
       const text = map.get(row.dataset.hash);
       if (text) {
         slot.textContent = text;
         slot.classList.remove('is-empty');
-      } else if (!slot.textContent) {
+      } else if (final && !slot.textContent) {
         slot.classList.add('is-empty');
+        slot.append(this.#unavailableNote());
       }
     }
 
@@ -277,6 +285,30 @@ export class Reader extends EventTarget {
     // tradução não existia. Reaplicar aqui cobre os dois casos.
     const mark = this.book ? storage.getReadingMark(this.book.id) : null;
     if (mark && mark.chapterIndex === this.chapterIndex) this.#applyMark();
+  }
+
+  #unavailableNote() {
+    const note = document.createElement('span');
+    note.className = 'tr-unavailable';
+    note.textContent = 'Não foi possível traduzir este trecho. ';
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'tr-retry';
+    retry.textContent = 'Tentar de novo';
+    retry.addEventListener('click', () => this.retryTranslation());
+    note.append(retry);
+    return note;
+  }
+
+  /** "Tentar de novo": só o que falhou vai à rede; o resto sai do cache. */
+  retryTranslation() {
+    if (!this.container) return;
+    for (const slot of this.container.querySelectorAll('.tr-trans.is-empty')) {
+      slot.classList.remove('is-empty');
+      slot.textContent = '';
+    }
+    delete this.container.dataset.translated;
+    this.translate();
   }
 
   /* --------------------------------- progresso -------------------------------- */
@@ -445,7 +477,7 @@ export class Reader extends EventTarget {
 
     // A coluna marcada pode estar oculta no modo atual, ou a tradução ainda não
     // ter chegado. Destacar o parágrafo inteiro é melhor que não mostrar nada.
-    if (!side || !side.textContent.trim() || side.offsetParent === null) {
+    if (!side || !side.textContent.trim() || side.classList.contains('is-empty') || side.offsetParent === null) {
       row.classList.add('is-marked');
       return row;
     }

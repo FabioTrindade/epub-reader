@@ -22,6 +22,7 @@ export const DEFAULT_PREFS = {
   viewMode: 'split',     // 'original' | 'translated' | 'split'
   fontFamily: 'serif',   // 'serif' | 'sans'
   markColor: 'amber',    // cor do marcador "parei aqui"
+  sidebarCollapsed: false, // sumário recolhido no computador
 };
 
 function read(key, fallback) {
