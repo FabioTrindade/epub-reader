@@ -109,7 +109,7 @@
   --reader-font-family: var(--font-serif);
 
   --header-h: 56px;
-  --footer-h: 52px;
+  --footer-h: 60px;
   --sidebar-w: 280px;
 }
 
@@ -760,29 +760,6 @@ mark.reading-mark {
 /* Quando o parágrafo tem os dois, a fita sai da frente da barra. */
 .tr-row.is-marked.has-bookmark::after { left: -34px; }
 
-/* Botões do rodapé: rótulo em texto, porque dois ícones parecidos lado a lado
-   não deixam claro qual faz o quê. */
-.footer-action {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  height: 34px;
-  padding: 0 .7rem;
-  border-radius: 9px;
-  color: var(--muted);
-  font-size: .82rem;
-  white-space: nowrap;
-  transition: background .15s, color .15s;
-}
-.footer-action:hover { background: var(--surface-2); color: var(--fg); }
-.footer-action svg { width: 17px; height: 17px; }
-.footer-action.is-mark:hover { color: var(--mark-hue); }
-
-/* Estado "remover": o botão avisa o que o próximo clique faz, em vez de
-   silenciosamente mover a marca que você acabou de fazer. */
-.footer-action.is-remove { color: var(--mark-hue); }
-.footer-action.is-remove:hover { color: var(--error); background: var(--surface-2); }
-
 .mark-handle {
   position: fixed;
   z-index: 40;
@@ -1011,38 +988,114 @@ mark.dict-highlight {
 /* --------------------------------- footer --------------------------------- */
 
 .app-footer {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: .8rem;
-  height: var(--footer-h);
-  padding: 0 1rem;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: var(--surface);
+  justify-content: space-between;
+  gap: 16px;
+  min-height: var(--footer-h);
+  padding: 10px 20px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .nav-btn {
-  padding: .4rem .8rem;
-  border-radius: 8px;
-  color: var(--muted);
-  font-size: .9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--fg);
 }
-.nav-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--fg); }
+.nav-btn svg { width: 18px; height: 18px; }
+.nav-btn:hover:not(:disabled) { background: var(--surface-2); }
 
 .footer-center {
   flex: 1;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: .3rem;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
-#chapter-label {
-  font-size: .8rem;
-  text-align: center;
+.footer-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-width: 0;
+}
+#chapter-label, #chapter-label-short {
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+#chapter-label-short { display: none; }
+.footer-center .progress {
+  flex: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.footer-center .progress-fill { min-width: 6px; }
+
+/* "Parei aqui" compacto: o comportamento sem seleção (marcar o parágrafo do
+   topo) precisa de um botão além da tecla M. */
+.mark-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.mark-btn svg { width: 16px; height: 16px; }
+.mark-btn:hover { background: var(--surface-2); color: var(--mark-hue); }
+/* Estado "remover": avisa o que o próximo clique faz, em vez de mover em
+   silêncio a marca que você acabou de fazer. */
+.mark-btn.is-remove { color: var(--mark-hue); }
+.mark-btn.is-remove:hover { color: var(--error); }
+
+/* ---------------------------- barra de seleção ---------------------------- */
+
+/* Pílula em cores invertidas do tema: escura no claro, clara no escuro. */
+.selection-bar {
+  position: fixed;
+  z-index: 75;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--fg);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(24, 24, 27, .24);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.selection-bar button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 9px;
+  color: var(--bg);
+  font-weight: 500;
+}
+.selection-bar button:hover { background: color-mix(in srgb, var(--bg) 16%, transparent); }
+.mark-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--mark-hue);
 }
 
 /* -------------------------------- diálogos -------------------------------- */
@@ -1314,6 +1367,8 @@ mark.dict-highlight {
 }
 
 @media (max-width: 768px) {
+  :root { --footer-h: 72px; }
+
   /* voltar | título centralizado | Aa ⋯ — o sumário desce para o rodapé e o
      seletor de modo vira as abas abaixo do topo. */
   .app-header {
@@ -1354,11 +1409,29 @@ mark.dict-highlight {
   .welcome { padding: 1.2rem 1.1rem 3rem; }
   .toasts { left: 1rem; right: 1rem; max-width: none; }
 
-  /* Sem espaço para os rótulos: voltam a ser só ícones, com os title/aria
-     intactos para quem precisar confirmar o que cada um faz. */
-  .btn-label { display: none; }
-  .footer-action { padding: 0 .5rem; }
-  .app-footer { gap: .4rem; }
+  /* Rodapé: barra de progresso em toda a largura, e embaixo
+     sumário | "Cap. 1 de 135 · 2%" | ‹ › com alvos de 48px. */
+  .app-footer {
+    gap: 0;
+    padding: 6px 8px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+  #btn-toc { order: 0; width: 48px; height: 48px; }
+  .footer-center { order: 1; }
+  #btn-prev { order: 2; }
+  #btn-next { order: 3; }
+  .nav-btn { justify-content: center; width: 48px; height: 48px; padding: 0; }
+  .nav-label { display: none; }
+  .footer-center .progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    border-radius: 0;
+  }
+  #chapter-label { display: none; }
+  #chapter-label-short { display: inline; }
+  .mark-btn { width: 44px; height: 44px; }
 }
 
 @media (max-width: 420px) {

@@ -48,6 +48,7 @@ function init() {
   wireReaderEvents();
   wireNavigation();
   wireViewModes(prefs.viewMode);
+  wireSelectionBar();
 
   library.render();
   restoreLastBook();
@@ -90,7 +91,7 @@ async function handleFile(file) {
     const existing = await db.getBook(id);
     if (existing) {
       // Livro já conhecido: reabre sem regravar os megabytes.
-      await openBook(existing.id, existing.file);
+      await openBook(existing);
       return;
     }
 
@@ -114,7 +115,7 @@ async function handleFile(file) {
       lastOpenedAt: Date.now(),
     });
 
-    await startReading(id, parsed);
+    await startReading(id, parsed, chapterLengths);
     library.render();
   } catch (err) {
     if (err.message !== 'DRM_PROTECTED') {
@@ -125,11 +126,12 @@ async function handleFile(file) {
   }
 }
 
-async function openBook(id, buffer) {
+/** Abre um livro já guardado; `record` é o registro do IndexedDB. */
+async function openBook(record) {
   setBusy(true);
   try {
-    const parsed = await parseEpub(buffer, null);
-    await startReading(id, parsed);
+    const parsed = await parseEpub(record.file, null);
+    await startReading(record.id, parsed, record.chapterLengths);
   } catch (err) {
     notify.error('parse-failed', 'Não foi possível abrir o livro', String(err.message || err));
   } finally {
@@ -140,11 +142,12 @@ async function openBook(id, buffer) {
 async function openFromLibrary(id) {
   const record = await db.getBook(id);
   if (!record) return;
-  await openBook(id, record.file);
+  await openBook(record);
 }
 
-async function startReading(id, parsed) {
-  currentBook = { id, ...parsed };
+/** `chapterLengths` (medido na importação) é o que dá o "% do livro" do rodapé. */
+async function startReading(id, parsed, chapterLengths = null) {
+  currentBook = { id, ...parsed, chapterLengths };
 
   $('#welcome').hidden = true;
   $('#book-title').textContent = parsed.title;
@@ -192,6 +195,7 @@ async function backfillBookRecord(id, parsed) {
   if (!record.chapterLengths?.length) {
     try {
       patch.chapterLengths = await measureChapters(parsed);
+      if (currentBook?.id === id) currentBook.chapterLengths = patch.chapterLengths;
     } catch {
       // Sem a medição o percentual apenas continua aproximado.
     }
@@ -205,7 +209,7 @@ async function backfillBookRecord(id, parsed) {
 async function restoreLastBook() {
   const books = await db.listBooks();
   const last = books[0];
-  if (last?.lastOpenedAt) await openBook(last.id, last.file);
+  if (last?.lastOpenedAt) await openBook(last);
 }
 
 async function deleteBook(book) {
@@ -224,6 +228,7 @@ async function deleteBook(book) {
     $('#book-title').textContent = 'EPUB Reader';
     renderSubtitle();
     $('#chapter-label').textContent = '—';
+    $('#chapter-label-short').textContent = '';
     sidebar.renderToc([]);
   }
 
@@ -237,11 +242,7 @@ function wireReaderEvents() {
   reader.addEventListener('chapter-loaded', (ev) => {
     const { chapter, index } = ev.detail;
     const total = currentBook.chapters.length;
-    // O contador segue a lateral; as setas seguem os capítulos internos.
-    const position = chapter.tocPosition + 1;
-    $('#chapter-label').textContent =
-      `${chapter.title || `Capítulo ${position}`} · ${position}/${currentBook.tocCount}`;
-    renderSubtitle(chapter.title || `Capítulo ${position}`);
+    renderSubtitle(chapter.title || `Capítulo ${chapter.tocPosition + 1}`);
     sidebar.highlight(index);
     $('#btn-prev').disabled = index === 0;
     $('#btn-next').disabled = index === total - 1;
@@ -257,24 +258,15 @@ function wireReaderEvents() {
 
   reader.addEventListener('chapter-error', () => {
     $('#chapter-label').textContent = 'Capítulo indisponível';
+    $('#chapter-label-short').textContent = 'Capítulo indisponível';
   });
 
   reader.addEventListener('scroll', (ev) => {
     updateReadingProgress(ev.detail.ratio);
     updateGotoMark();
-    scheduleMarkButtonUpdate();
+    scheduleSelectionUi();
   });
-
-  // selectionchange dispara muito durante o arrasto: uma atualização por frame.
-  let markBtnFrame = null;
-  function scheduleMarkButtonUpdate() {
-    if (markBtnFrame) return;
-    markBtnFrame = requestAnimationFrame(() => {
-      markBtnFrame = null;
-      updateMarkButton();
-    });
-  }
-  document.addEventListener('selectionchange', scheduleMarkButtonUpdate);
+  document.addEventListener('selectionchange', scheduleSelectionUi);
 
   reader.addEventListener('translate-start', () => showTranslating(0));
 
@@ -327,8 +319,34 @@ function renderSubtitle(chapterTitle = '') {
   el.replaceChildren(author, chapter);
 }
 
-function updateReadingProgress(ratio) {
-  $('#reading-progress').style.width = `${Math.round(ratio * 100)}%`;
+/**
+ * Rodapé: "Capítulo 7 de 146 · 2% do livro" e a barra. O capítulo conta pela
+ * lateral, como a biblioteca; o percentual, por volume de texto.
+ */
+function updateReadingProgress(scrollRatio) {
+  const chapter = reader.chapter;
+  if (!currentBook || !chapter) return;
+
+  const position = chapter.tocPosition + 1;
+  const { ratio, exact } = storage.computeProgress(
+    currentBook.chapterLengths, currentBook.chapters.length, reader.chapterIndex, scrollRatio);
+  // O "~" avisa que o livro ainda não foi medido (importado antes da medição).
+  const percent = `${exact ? '' : '~'}${Math.round(ratio * 100)}%`;
+
+  $('#chapter-label').textContent = `Capítulo ${position} de ${currentBook.tocCount} · ${percent} do livro`;
+  $('#chapter-label-short').textContent = `Cap. ${position} de ${currentBook.tocCount} · ${percent}`;
+  $('#reading-progress').style.width = `${ratio * 100}%`;
+}
+
+// selectionchange e scroll disparam muito: uma atualização por frame.
+let selectionFrame = null;
+function scheduleSelectionUi() {
+  if (selectionFrame) return;
+  selectionFrame = requestAnimationFrame(() => {
+    selectionFrame = null;
+    updateMarkButton();
+    positionSelectionBar();
+  });
 }
 
 function wireNavigation() {
@@ -336,14 +354,11 @@ function wireNavigation() {
   $('#btn-next').addEventListener('click', () => reader.next());
   $('#btn-library').addEventListener('click', showLibrary);
   $('#btn-back').addEventListener('click', showLibrary);
-  $('#btn-bookmark').addEventListener('click', addBookmark);
   $('#btn-mark').addEventListener('click', markLine);
 
   // Sem isto o mousedown move o foco e desfaz a seleção ANTES do click rodar —
   // o botão receberia uma seleção vazia e marcaria o parágrafo errado.
-  for (const sel of ['#btn-mark', '#btn-bookmark']) {
-    $(sel).addEventListener('mousedown', (ev) => ev.preventDefault());
-  }
+  $('#btn-mark').addEventListener('mousedown', (ev) => ev.preventDefault());
   $('#btn-goto-mark').addEventListener('click', () => reader.goToMark());
 
   document.addEventListener('keydown', (ev) => {
@@ -387,7 +402,11 @@ function markLine() {
     return;
   }
 
-  const mark = reader.mark();
+  // Seleção que atravessa parágrafos não tem um texto único para ancorar:
+  // marca o parágrafo onde ela começa, não o do topo da tela.
+  const crossing = hasTextSelection() && !reader.selectionAnchor();
+  const mark = crossing ? reader.markRow(selectionStartRow()) : reader.mark();
+  if (crossing) window.getSelection()?.removeAllRanges();
   if (!mark) {
     toast('info', 'Nada para marcar', 'Esta página não tem parágrafos de texto.');
     return;
@@ -413,13 +432,12 @@ function updateMarkButton() {
   btn.classList.toggle('is-remove', removing);
   btn.querySelector('.icon-mark').hidden = removing;
   btn.querySelector('.icon-unmark').hidden = !removing;
-  btn.querySelector('.btn-label').textContent = removing ? 'Remover marca' : 'Parei aqui';
   btn.setAttribute('aria-label', removing
-    ? 'Remover o marcador'
-    : 'Parei aqui: marcar o trecho selecionado');
+    ? 'Remover marca'
+    : 'Parei aqui: marcar o parágrafo do topo da tela');
   btn.title = removing
-    ? 'Remover o marcador (M)'
-    : 'Parei aqui — selecione um trecho e clique. Sem seleção, marca o parágrafo do topo. (M)';
+    ? 'Remover marca (M)'
+    : 'Parei aqui — sem seleção, marca o parágrafo do topo. (M)';
 }
 
 /** O atalho só aparece quando o marcador existe e está fora de vista. */
@@ -438,7 +456,12 @@ function showLibrary() {
 function addBookmark() {
   if (!currentBook || !reader.chapter) return;
 
-  const anchor = reader.currentAnchor();
+  // Com seleção, salva o parágrafo dela; sem, o do topo da tela.
+  const selected = hasTextSelection()
+    ? reader.selectionAnchor() || reader.rowAnchor(selectionStartRow())
+    : null;
+  const anchor = selected || reader.currentAnchor();
+  if (selected) window.getSelection()?.removeAllRanges();
   if (!anchor) {
     toast('info', 'Nada para salvar', 'Esta página não tem parágrafos de texto.');
     return;
@@ -453,6 +476,119 @@ function addBookmark() {
   // storage recusa duplicatas; avisar "salvo" nesse caso seria mentira.
   if (list.length === before) toast('info', 'Este trecho já estava salvo', anchor.excerpt);
   else toast('info', 'Trecho salvo', anchor.excerpt);
+}
+
+/* ------------------------------ barra de seleção ---------------------------- */
+
+/*
+ * Parei aqui / Salvar / Copiar junto do trecho selecionado.
+ *
+ * No toque, tocar num botão da barra pode desfazer a seleção antes de o clique
+ * chegar. Por isso guardamos a última seleção válida e a restauramos na hora
+ * de agir, e não escondemos a barra enquanto ela está sendo tocada.
+ */
+let lastSelection = null;
+let pressingSelectionBar = false;
+
+function wireSelectionBar() {
+  const bar = $('#selection-bar');
+
+  const act = (fn) => () => {
+    restoreSelection();
+    fn();
+    hideSelectionBar();
+  };
+  $('#sel-mark').addEventListener('click', act(() => {
+    if (!selectionTouchesMark()) return markLine();
+    window.getSelection()?.removeAllRanges();
+    reader.clearMark();
+    toast('info', 'Marcador removido', 'Selecione um trecho e clique para marcar de novo.');
+    updateMarkButton();
+  }));
+  $('#sel-save').addEventListener('click', act(addBookmark));
+  $('#sel-copy').addEventListener('click', act(copySelection));
+
+  bar.addEventListener('mousedown', (ev) => ev.preventDefault());
+  bar.addEventListener('pointerdown', () => { pressingSelectionBar = true; });
+  document.addEventListener('pointerdown', (ev) => {
+    if (!bar.contains(ev.target)) pressingSelectionBar = false;
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape' || bar.hidden) return;
+    window.getSelection()?.removeAllRanges();
+    hideSelectionBar();
+  });
+  window.addEventListener('resize', scheduleSelectionUi);
+}
+
+function positionSelectionBar() {
+  const bar = $('#selection-bar');
+  if (!hasTextSelection() || document.querySelector('dialog[open]')) {
+    if (!pressingSelectionBar) hideSelectionBar();
+    return;
+  }
+
+  const range = window.getSelection().getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+  const view = $('#viewport').getBoundingClientRect();
+  if (rect.bottom < view.top || rect.top > view.bottom) {
+    bar.hidden = true;
+    return;
+  }
+
+  lastSelection = range.cloneRange();
+  bar.querySelector('.sel-mark-label').textContent =
+    selectionTouchesMark() ? 'Remover marca' : 'Parei aqui';
+  bar.hidden = false;
+
+  const { width, height } = bar.getBoundingClientRect();
+  const left = Math.min(Math.max(8, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 8);
+  // Acima da seleção, ou abaixo se não couber. No toque, direto abaixo: acima
+  // fica o menu de copiar/colar do próprio sistema.
+  let top = rect.top - height - 12;
+  if (window.matchMedia('(pointer: coarse)').matches || top < view.top + 8) top = rect.bottom + 12;
+  bar.style.left = `${left}px`;
+  bar.style.top = `${top}px`;
+}
+
+function hideSelectionBar() {
+  $('#selection-bar').hidden = true;
+  pressingSelectionBar = false;
+}
+
+function restoreSelection() {
+  const sel = window.getSelection();
+  if (sel && sel.isCollapsed && lastSelection) {
+    sel.removeAllRanges();
+    sel.addRange(lastSelection);
+  }
+}
+
+/** A seleção encosta no "parei aqui" atual? Então a ação é removê-lo. */
+function selectionTouchesMark() {
+  const sel = window.getSelection();
+  if (!sel?.rangeCount) return false;
+  const range = sel.getRangeAt(0);
+  return [...$('#viewport').querySelectorAll('mark.reading-mark, .tr-row.is-marked')]
+    .some((el) => range.intersectsNode(el));
+}
+
+function selectionStartRow() {
+  const node = window.getSelection()?.getRangeAt(0).startContainer;
+  const el = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+  return el?.closest('.tr-row') || null;
+}
+
+async function copySelection() {
+  const text = window.getSelection()?.toString().trim();
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // Clipboard bloqueado (contexto ou permissão): o comando antigo copia a seleção.
+    document.execCommand('copy');
+  }
+  toast('info', 'Trecho copiado', text.length > 80 ? `${text.slice(0, 80)}…` : text);
 }
 
 /* -------------------------------- modos de vista ---------------------------- */

@@ -110,26 +110,34 @@
   <button id="btn-toc" class="icon-btn" aria-label="Abrir sumário" title="Sumário">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
   </button>
-  <button id="btn-prev" class="nav-btn" aria-label="Capítulo anterior">&#9664;</button>
+  <button id="btn-prev" class="nav-btn" aria-label="Capítulo anterior">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="nav-label">Anterior</span>
+  </button>
   <div class="footer-center">
-    <span id="chapter-label" class="muted">—</span>
+    <div class="footer-status">
+      <span id="chapter-label" class="muted">—</span>
+      <span id="chapter-label-short" class="muted" aria-hidden="true"></span>
+      <!-- "Parei aqui" sem seleção: marca o parágrafo do topo da tela. -->
+      <button id="btn-mark" class="mark-btn"
+              aria-label="Parei aqui: marcar o parágrafo do topo da tela"
+              title="Parei aqui — sem seleção, marca o parágrafo do topo. (M)">
+        <svg class="icon-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 12h7M4 17h11"/><path d="M19 9v9m0 0l-2.5-2.5M19 18l2.5-2.5"/></svg>
+        <svg class="icon-unmark" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 7h11M4 12h7M4 17h11"/><path d="M16 9l6 6m0-6l-6 6"/></svg>
+      </button>
+    </div>
     <div class="progress thin"><div id="reading-progress" class="progress-fill"></div></div>
   </div>
-  <button id="btn-mark" class="footer-action is-mark"
-          aria-label="Parei aqui: marcar o trecho selecionado"
-          title="Parei aqui — selecione um trecho e clique. Sem seleção, marca o parágrafo do topo. (M)">
-    <svg class="icon-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 12h7M4 17h11"/><path d="M19 9v9m0 0l-2.5-2.5M19 18l2.5-2.5"/></svg>
-    <svg class="icon-unmark" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 7h11M4 12h7M4 17h11"/><path d="M16 9l6 6m0-6l-6 6"/></svg>
-    <span class="btn-label">Parei aqui</span>
+  <button id="btn-next" class="nav-btn" aria-label="Próximo capítulo">
+    <span class="nav-label">Próximo</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
   </button>
-  <button id="btn-bookmark" class="footer-action"
-          aria-label="Salvar este trecho na lista lateral"
-          title="Salvar trecho — guarda na aba Trechos salvos (B)">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-    <span class="btn-label">Salvar trecho</span>
-  </button>
-  <button id="btn-next" class="nav-btn" aria-label="Próximo capítulo">&#9654;</button>
 </footer>
+
+<!-- Ações do trecho selecionado: aparecem junto da seleção. -->
+<div id="selection-bar" class="selection-bar" role="toolbar" aria-label="Ações do trecho selecionado" hidden>
+  <button id="sel-mark"><span class="mark-swatch" aria-hidden="true"></span><span class="sel-mark-label">Parei aqui</span></button>
+  <button id="sel-save">Salvar</button>
+  <button id="sel-copy">Copiar</button>
+</div>
 
 <!-- Notificações: o painel de diagnóstico -->
 <dialog id="dlg-notifications" class="dialog">

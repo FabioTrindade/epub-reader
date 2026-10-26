@@ -467,9 +467,20 @@ export class Reader extends EventTarget {
     }
   }
 
+  /** Âncora do parágrafo da seleção, com o trecho selecionado como resumo. */
+  selectionAnchor() {
+    if (!this.container) return null;
+    const selection = readSelection(this.container);
+    const anchor = this.rowAnchor(selection?.side.closest('.tr-row'));
+    return anchor && { ...anchor, excerpt: selection.text.slice(0, 120) };
+  }
+
   /** Dados de âncora do parágrafo no topo — base de qualquer marca. */
   currentAnchor() {
-    const row = this.topVisibleRow();
+    return this.rowAnchor(this.topVisibleRow());
+  }
+
+  rowAnchor(row) {
     if (!row || !this.book) return null;
     return {
       chapterIndex: this.chapterIndex,
