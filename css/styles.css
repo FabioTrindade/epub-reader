@@ -92,6 +92,8 @@
   --success: #15803D;
   --trans-bg: transparent;
   --trans-fg: #4A4A52;
+  --seg-fg: #55555C;
+  --seg-active: #FFFFFF;
   --info: #4a6fa5;
   --warn: #b07a1e;
   --error: #b3261e;
@@ -125,6 +127,8 @@
     --selection: #34406B;
     --success: #5CC98A;
     --trans-fg: #C4C4CA;
+    --seg-fg: #A0A0A8;
+    --seg-active: #3A3A42;
     --info: #7da2d9;
     --warn: #e0a942;
     --error: #e5716a;
@@ -145,6 +149,8 @@
   --selection: #34406B;
   --success: #5CC98A;
   --trans-fg: #C4C4CA;
+  --seg-fg: #A0A0A8;
+  --seg-active: #3A3A42;
   --info: #7da2d9;
   --warn: #e0a942;
   --error: #e5716a;
@@ -156,7 +162,7 @@
 * { box-sizing: border-box; }
 
 /* Uma regra de autor com `display` vence o [hidden] da folha do navegador —
-   sem este !important, .translate-bar e .mobile-tabs ficam visíveis mesmo
+   sem este !important, .menu e .mobile-tabs ficam visíveis mesmo
    marcadas como hidden. */
 [hidden] { display: none !important; }
 
@@ -218,13 +224,14 @@ button:disabled { opacity: .35; cursor: not-allowed; }
   align-items: center;
   justify-content: center;
   position: relative;
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   color: var(--fg);
   transition: background .15s;
 }
 .icon-btn:hover { background: var(--surface-2); }
+svg.icon-fill { fill: currentColor; stroke: none; }
 
 .small-btn {
   width: 28px; height: 28px;
@@ -243,10 +250,10 @@ button:disabled { opacity: .35; cursor: not-allowed; }
 .primary-btn {
   display: inline-block;
   padding: .65rem 1.3rem;
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--accent);
   color: var(--accent-fg);
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -257,22 +264,39 @@ button:disabled { opacity: .35; cursor: not-allowed; }
 
 /* --------------------------------- header --------------------------------- */
 
+/* Três colunas, para o seletor de modo ficar no centro de verdade, qualquer
+   que seja o tamanho do título à esquerda. */
 .app-header {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: .6rem;
-  height: var(--header-h);
-  padding: 0 .7rem;
-  padding-top: env(safe-area-inset-top, 0px);
-  background: var(--surface);
+  gap: 12px;
+  min-height: var(--header-h);
+  padding: 8px 20px;
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
-.app-title { min-width: 0; flex: 1; }
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.header-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.app-title { min-width: 0; }
 .app-title h1 {
   margin: 0;
-  font-size: .98rem;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -280,54 +304,140 @@ button:disabled { opacity: .35; cursor: not-allowed; }
 }
 .app-title p {
   margin: 0;
-  font-size: .78rem;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.subtitle-author:not(:empty) + .subtitle-chapter:not(:empty)::before { content: ' · '; }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: .2rem;
+/* O "Aa" é o próprio rótulo do botão de aparência, na fonte do livro. */
+.aa-btn {
+  width: auto;
+  padding: 0 12px;
+  font-family: var(--font-serif);
+  font-size: 17px;
 }
 
+/* Seletor segmentado: trilho cinza, opção ativa em "papel" levantado. */
 .mode-switch {
   display: flex;
-  margin-right: .4rem;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  overflow: hidden;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border-radius: 10px;
 }
-.mode-switch button {
-  padding: .4rem .7rem;
-  font-size: .82rem;
+.mode-switch button,
+.mobile-tabs button {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--seg-fg);
+  white-space: nowrap;
+}
+.mode-switch button.is-active,
+.mobile-tabs button.is-active {
+  background: var(--seg-active);
+  color: var(--fg);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, .10);
+}
+
+.translate-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
 }
-.mode-switch button.is-active {
+.translate-status:hover { background: var(--surface-2); color: var(--fg); }
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--accent);
-  color: var(--accent-fg);
-  font-weight: 600;
 }
 
-.badge {
+/* Progresso da tradução: uma linha colada na borda de baixo do topo. */
+.translate-line {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  pointer-events: none;
+}
+.translate-line span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width .25s;
+}
+
+/* Ponto sobre o ⋯ quando há aviso ou erro não lido. */
+.more-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg);
+}
+.more-dot[data-level="error"] { background: var(--error); }
+
+.badge {
+  display: inline-block;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 9px;
   background: var(--info);
   color: #fff;
-  font-size: .68rem;
-  font-weight: 700;
-  line-height: 17px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
   text-align: center;
 }
 .badge[data-level="warn"] { background: var(--warn); }
 .badge[data-level="error"] { background: var(--error); }
+
+/* ---------------------------------- menus --------------------------------- */
+
+.menu {
+  position: fixed;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.menu [role="menuitem"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--fg);
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+}
+.menu [role="menuitem"]:hover { background: var(--surface-2); }
 
 /* ---------------------------------- corpo --------------------------------- */
 
@@ -699,17 +809,28 @@ mark.dict-highlight {
   border-radius: 3px;
 }
 
-/* ------------------------------ barra tradução ---------------------------- */
+/* ------------------------- tradução em andamento ------------------------- */
 
-.translate-bar {
+/* Esqueleto do parágrafo que ainda não chegou: duas barras paradas (sem brilho
+   animado, que distrairia de quem está lendo a coluna ao lado). */
+.is-translating .mode-split .tr-trans:empty,
+.is-translating .mode-translated .tr-trans:empty {
   display: flex;
-  align-items: center;
-  gap: .8rem;
-  padding: .5rem 1rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  font-size: .85rem;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: .45em;
 }
+.is-translating .mode-split .tr-trans:empty::before,
+.is-translating .mode-split .tr-trans:empty::after,
+.is-translating .mode-translated .tr-trans:empty::before,
+.is-translating .mode-translated .tr-trans:empty::after {
+  content: '';
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.is-translating .tr-trans:empty::after { width: 64%; }
 
 .progress {
   flex: 1;
@@ -726,23 +847,18 @@ mark.dict-highlight {
   transition: width .25s;
 }
 
+/* No celular, Original | Tradução logo abaixo do topo, no mesmo estilo
+   segmentado do seletor do computador. */
 .mobile-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  margin: 12px 16px 0;
+  padding: 3px;
+  background: var(--surface-2);
+  border-radius: 10px;
 }
-.mobile-tabs button {
-  flex: 1;
-  padding: .6rem;
-  font-size: .85rem;
-  color: var(--muted);
-  border-bottom: 2px solid transparent;
-}
-.mobile-tabs button.is-active {
-  color: var(--fg);
-  font-weight: 600;
-  border-bottom-color: var(--accent);
-}
+.mobile-tabs button { height: 36px; }
 
 /* --------------------------------- welcome -------------------------------- */
 
@@ -1171,8 +1287,29 @@ mark.dict-highlight {
   #btn-sidebar { display: none; }
 }
 
+@media (min-width: 769px) {
+  #btn-back, #btn-toc { display: none; }
+}
+
 @media (max-width: 768px) {
-  .app-title p { display: none; }
+  /* voltar | título centralizado | Aa ⋯ — o sumário desce para o rodapé e o
+     seletor de modo vira as abas abaixo do topo. */
+  .app-header {
+    grid-template-columns: 96px minmax(0, 1fr) 96px;
+    gap: 4px;
+    padding: 6px 8px;
+    padding-top: calc(6px + env(safe-area-inset-top, 0px));
+  }
+  .header-start { display: contents; }
+  #btn-back { grid-column: 1; justify-self: start; width: 44px; height: 44px; }
+  .app-title { grid-column: 2; text-align: center; }
+  .header-end { grid-column: 3; gap: 0; }
+  #btn-sidebar, #btn-library, #translate-status { display: none; }
+  .aa-btn, #btn-more { height: 44px; }
+  .aa-btn { padding: 0 10px; }
+  #btn-more { width: 44px; }
+  .subtitle-author { display: none; }
+  .subtitle-chapter::before { content: none !important; }
 
   /* Duas colunas não cabem no celular, e o seletor do topo tiraria o espaço do
      título: os modos viram as abas Original/Traduzido (ver syncMobileTabs). */

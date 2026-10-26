@@ -9,7 +9,7 @@ import * as storage from './storage.js';
 import * as db from './db.js';
 import {
   $, applyPrefs, toast, wireDialogs,
-  NotificationUI, SidebarUI, LibraryUI, SettingsUI,
+  NotificationUI, SidebarUI, LibraryUI, SettingsUI, PopoverMenu,
 } from './ui.js';
 
 const MOBILE = window.matchMedia('(max-width: 768px)');
@@ -28,6 +28,8 @@ function init() {
 
   wireDialogs();
   new NotificationUI();
+  new PopoverMenu($('#btn-more'), $('#menu-more'));
+  new PopoverMenu($('#translate-status'), $('#menu-translate'));
 
   reader = new Reader($('#viewport'));
   sidebar = new SidebarUI(
@@ -146,7 +148,7 @@ async function startReading(id, parsed) {
 
   $('#welcome').hidden = true;
   $('#book-title').textContent = parsed.title;
-  $('#book-author').textContent = parsed.author;
+  renderSubtitle();
   document.title = `${parsed.title} — EPUB Reader`;
 
   sidebar.renderToc(parsed.chapters);
@@ -220,7 +222,7 @@ async function deleteBook(book) {
     currentBook = null;
     $('#welcome').hidden = false;
     $('#book-title').textContent = 'EPUB Reader';
-    $('#book-author').textContent = '';
+    renderSubtitle();
     $('#chapter-label').textContent = '—';
     sidebar.renderToc([]);
   }
@@ -239,6 +241,7 @@ function wireReaderEvents() {
     const position = chapter.tocPosition + 1;
     $('#chapter-label').textContent =
       `${chapter.title || `Capítulo ${position}`} · ${position}/${currentBook.tocCount}`;
+    renderSubtitle(chapter.title || `Capítulo ${position}`);
     sidebar.highlight(index);
     $('#btn-prev').disabled = index === 0;
     $('#btn-next').disabled = index === total - 1;
@@ -273,28 +276,55 @@ function wireReaderEvents() {
   }
   document.addEventListener('selectionchange', scheduleMarkButtonUpdate);
 
-  reader.addEventListener('translate-start', () => {
-    $('#translate-bar').hidden = false;
-    $('#translate-label').textContent = 'Traduzindo…';
-    $('#translate-progress').style.width = '0%';
-  });
+  reader.addEventListener('translate-start', () => showTranslating(0));
 
   reader.addEventListener('translate-progress', (ev) => {
     const { done, total } = ev.detail;
-    $('#translate-progress').style.width = `${(done / total) * 100}%`;
-    $('#translate-label').textContent = `Traduzindo ${done}/${total}`;
+    showTranslating(done / total);
   });
 
   for (const type of ['translate-done', 'translate-error', 'translate-cancelled']) {
-    reader.addEventListener(type, () => { $('#translate-bar').hidden = true; });
+    reader.addEventListener(type, hideTranslating);
   }
 
   $('#btn-cancel-translate').addEventListener('click', () => {
     // Abortar de fato: só trocar o modo deixaria os requests correndo.
     reader.cancelTranslation();
     setViewMode('original');
-    $('#translate-bar').hidden = true;
+    hideTranslating();
   });
+}
+
+/**
+ * Tradução em andamento: linha fina sob o topo, "Traduzindo N%" ao lado do Aa
+ * e esqueletos nos parágrafos que ainda faltam (classe no body).
+ */
+function showTranslating(ratio) {
+  const percent = Math.round(ratio * 100);
+  document.body.classList.add('is-translating');
+  $('#translate-status').hidden = false;
+  $('#translate-line').hidden = false;
+  $('#translate-label').textContent = `Traduzindo ${percent}%`;
+  $('#translate-progress').style.width = `${percent}%`;
+}
+
+function hideTranslating() {
+  document.body.classList.remove('is-translating');
+  $('#translate-status').hidden = true;
+  $('#translate-line').hidden = true;
+  $('#menu-translate').hidden = true;
+}
+
+/** "Autor · capítulo" sob o título; no celular só o capítulo cabe. */
+function renderSubtitle(chapterTitle = '') {
+  const el = $('#book-subtitle');
+  const author = document.createElement('span');
+  author.className = 'subtitle-author';
+  author.textContent = currentBook?.author || '';
+  const chapter = document.createElement('span');
+  chapter.className = 'subtitle-chapter';
+  chapter.textContent = chapterTitle;
+  el.replaceChildren(author, chapter);
 }
 
 function updateReadingProgress(ratio) {
@@ -304,8 +334,8 @@ function updateReadingProgress(ratio) {
 function wireNavigation() {
   $('#btn-prev').addEventListener('click', () => reader.previous());
   $('#btn-next').addEventListener('click', () => reader.next());
-  $('#btn-theme').addEventListener('click', cycleTheme);
   $('#btn-library').addEventListener('click', showLibrary);
+  $('#btn-back').addEventListener('click', showLibrary);
   $('#btn-bookmark').addEventListener('click', addBookmark);
   $('#btn-mark').addEventListener('click', markLine);
 
@@ -451,13 +481,15 @@ function wireViewModes(initial) {
 
 function selectMobileTab(mode) {
   for (const btn of document.querySelectorAll('#mobile-tabs button')) {
-    btn.classList.toggle('is-active', btn.dataset.mobileMode === mode);
+    const active = btn.dataset.mobileMode === mode;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
   }
 }
 
 /**
  * No celular o lado-a-lado não cabe, e o seletor do topo tiraria o espaço do
- * título: os modos viram as abas Original/Traduzido. Com a preferência em
+ * título: os modos viram as abas Original/Tradução. Com a preferência em
  * "split", a aba lembra a última escolha e o desktop continua lado a lado.
  */
 function syncMobileTabs(mode) {
@@ -476,7 +508,9 @@ function syncMobileTabs(mode) {
 function setViewMode(mode) {
   storage.setPrefs({ viewMode: mode });
   for (const btn of document.querySelectorAll('#mode-switch button')) {
-    btn.classList.toggle('is-active', btn.dataset.mode === mode);
+    const active = btn.dataset.mode === mode;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
   }
   syncMobileTabs(mode);
 }
@@ -488,15 +522,6 @@ function onPrefChange(key) {
   if (key === 'targetLang' && currentBook) {
     reader.loadChapter(reader.chapterIndex, { scrollRatio: reader.scrollRatio });
   }
-}
-
-function cycleTheme() {
-  const order = ['system', 'light', 'dark'];
-  const current = storage.getPrefs().theme;
-  const next = order[(order.indexOf(current) + 1) % order.length];
-  applyPrefs(storage.setPrefs({ theme: next }));
-  settings.sync(storage.getPrefs());
-  toast('info', 'Tema alterado', { system: 'Seguindo o sistema', light: 'Claro', dark: 'Escuro' }[next]);
 }
 
 async function clearTranslationCache() {

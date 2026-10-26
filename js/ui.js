@@ -58,9 +58,56 @@ const relativeTime = (ts) => {
   return `há ${Math.floor(s / 86400)} d`;
 };
 
+/* ---------------------------------- menus ---------------------------------- */
+
+/**
+ * Menu suspenso ancorado a um botão (⋯, "Traduzindo N%").
+ *
+ * Fecha ao escolher um item, com Esc ou com clique fora — o mesmo contrato
+ * de um menu nativo, sem o peso de um <dialog> modal.
+ */
+export class PopoverMenu {
+  constructor(trigger, menu) {
+    this.trigger = trigger;
+    this.menu = menu;
+
+    trigger.addEventListener('click', () => (menu.hidden ? this.open() : this.close()));
+    menu.addEventListener('click', (ev) => {
+      if (ev.target.closest('[role="menuitem"]')) this.close();
+    });
+    document.addEventListener('pointerdown', (ev) => {
+      if (!menu.hidden && !menu.contains(ev.target) && !trigger.contains(ev.target)) this.close();
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && !menu.hidden) {
+        this.close();
+        trigger.focus();
+      }
+    });
+    window.addEventListener('resize', () => this.close());
+  }
+
+  open() {
+    const rect = this.trigger.getBoundingClientRect();
+    this.menu.hidden = false;
+    this.menu.style.top = `${rect.bottom + 6}px`;
+    // Alinhado pela direita do botão: os gatilhos ficam no canto direito do topo.
+    this.menu.style.right = `${Math.max(8, window.innerWidth - rect.right)}px`;
+    this.trigger.setAttribute('aria-expanded', 'true');
+    this.menu.querySelector('[role="menuitem"]')?.focus();
+  }
+
+  close() {
+    if (this.menu.hidden) return;
+    this.menu.hidden = true;
+    this.trigger.setAttribute('aria-expanded', 'false');
+  }
+}
+
 export class NotificationUI {
   constructor() {
     this.badge = $('#notif-badge');
+    this.dot = $('#more-dot');
     this.dialog = $('#dlg-notifications');
     this.list = $('#notif-list');
 
@@ -70,6 +117,7 @@ export class NotificationUI {
       this.render();
     });
     $('#btn-copy-diagnostic').addEventListener('click', () => this.copyDiagnostic());
+    $('#menu-copy-diagnostic').addEventListener('click', () => this.copyDiagnostic());
 
     notify.addEventListener('change', (ev) => {
       this.refreshBadge();
@@ -87,13 +135,21 @@ export class NotificationUI {
 
   refreshBadge() {
     const count = notify.unreadCount;
+    const severity = notify.severity || 'info';
     this.badge.hidden = count === 0;
     this.badge.textContent = count > 9 ? '9+' : String(count);
-    this.badge.dataset.level = notify.severity || 'info';
+    this.badge.dataset.level = severity;
     $('#btn-notifications').setAttribute(
       'aria-label',
       count ? `Notificações (${count} não lidas)` : 'Notificações'
     );
+
+    // O ponto no ⋯ só chama atenção para aviso ou erro: informação pura
+    // não justifica tirar o leitor do texto.
+    const alert = count > 0 && severity !== 'info';
+    this.dot.hidden = !alert;
+    this.dot.dataset.level = severity;
+    $('#btn-more').setAttribute('aria-label', alert ? 'Mais opções (há avisos novos)' : 'Mais opções');
   }
 
   open() {
@@ -187,7 +243,9 @@ export class SidebarUI {
     this.onRemoveBookmark = onRemoveBookmark;
     this.chapters = [];
 
-    $('#btn-sidebar').addEventListener('click', () => this.toggle());
+    // No computador o sumário abre pelo topo; no celular, pelo rodapé.
+    this.toggles = [$('#btn-sidebar'), $('#btn-toc')];
+    for (const btn of this.toggles) btn.addEventListener('click', () => this.toggle());
     this.scrim.addEventListener('click', () => this.close());
 
     for (const tab of document.querySelectorAll('.sidebar-tabs button')) {
@@ -218,13 +276,13 @@ export class SidebarUI {
   open() {
     this.el.classList.add('is-open');
     this.scrim.hidden = false;
-    $('#btn-sidebar').setAttribute('aria-expanded', 'true');
+    for (const btn of this.toggles) btn.setAttribute('aria-expanded', 'true');
   }
 
   close() {
     this.el.classList.remove('is-open');
     this.scrim.hidden = true;
-    $('#btn-sidebar').setAttribute('aria-expanded', 'false');
+    for (const btn of this.toggles) btn.setAttribute('aria-expanded', 'false');
   }
 
   renderToc(chapters) {
@@ -427,7 +485,10 @@ export class SettingsUI {
     this.dialog = $('#dlg-settings');
     this.onChange = onChange;
 
-    $('#btn-settings').addEventListener('click', () => this.open());
+    // Há um "Aa" no topo da leitura e outro no da biblioteca.
+    for (const btn of document.querySelectorAll('[data-action="appearance"]')) {
+      btn.addEventListener('click', () => this.open());
+    }
     $('#btn-clear-cache').addEventListener('click', onClearCache);
 
     this.bindings = [

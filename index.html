@@ -13,40 +13,54 @@
 <a class="skip-link" href="#viewport">Pular para o conteúdo</a>
 
 <header class="app-header">
-  <button id="btn-sidebar" class="icon-btn" aria-label="Abrir sumário" aria-expanded="false">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-  </button>
-
-  <div class="app-title">
-    <h1 id="book-title">EPUB Reader</h1>
-    <p id="book-author" class="muted"></p>
-  </div>
-
-  <div class="toolbar">
-    <div class="mode-switch" id="mode-switch" role="group" aria-label="Modo de leitura">
-      <button data-mode="original" class="is-active">Original</button>
-      <button data-mode="split">Lado a lado</button>
-      <button data-mode="translated">Traduzido</button>
+  <div class="header-start">
+    <button id="btn-sidebar" class="icon-btn" aria-label="Abrir sumário" aria-expanded="false" title="Sumário">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
+    </button>
+    <button id="btn-back" class="icon-btn" aria-label="Voltar à biblioteca" title="Biblioteca">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <div class="app-title">
+      <h1 id="book-title">EPUB Reader</h1>
+      <p id="book-subtitle" class="muted"></p>
     </div>
+  </div>
 
-    <button id="btn-library" class="icon-btn" aria-label="Minha biblioteca" title="Biblioteca">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM4 19.5V21h16"/></svg>
+  <div class="mode-switch" id="mode-switch" role="group" aria-label="Modo de leitura">
+    <button data-mode="original" class="is-active" aria-pressed="true">Original</button>
+    <button data-mode="split" aria-pressed="false">Lado a lado</button>
+    <button data-mode="translated" aria-pressed="false">Tradução</button>
+  </div>
+
+  <div class="header-end">
+    <!-- Só durante a tradução; clicar oferece o "Cancelar tradução". -->
+    <button id="translate-status" class="translate-status" hidden aria-haspopup="menu" aria-expanded="false">
+      <span class="status-dot" aria-hidden="true"></span><span id="translate-label">Traduzindo…</span>
     </button>
-
-    <button id="btn-notifications" class="icon-btn" aria-label="Notificações" title="Notificações">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-      <span id="notif-badge" class="badge" hidden>0</span>
+    <button class="icon-btn aa-btn" data-action="appearance" aria-label="Aparência" title="Aparência">Aa</button>
+    <button id="btn-library" class="icon-btn" aria-label="Biblioteca" title="Biblioteca">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15.5 5l3.6-.9 3 15.4-3.6.9z"/></svg>
     </button>
-
-    <button id="btn-settings" class="icon-btn" aria-label="Configurações" title="Configurações">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
-    </button>
-
-    <button id="btn-theme" class="icon-btn" aria-label="Alternar tema" title="Tema">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <button id="btn-more" class="icon-btn" aria-label="Mais opções" title="Notificações e ajuda" aria-haspopup="menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-fill"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      <span id="more-dot" class="more-dot" hidden></span>
     </button>
   </div>
+
+  <div id="translate-line" class="translate-line" hidden><span id="translate-progress"></span></div>
 </header>
+
+<div id="menu-more" class="menu" role="menu" aria-label="Mais opções" hidden>
+  <button role="menuitem" id="btn-notifications">
+    <span>Notificações</span><span id="notif-badge" class="badge" hidden>0</span>
+  </button>
+  <button role="menuitem" id="menu-copy-diagnostic">Copiar diagnóstico</button>
+  <a role="menuitem" href="https://github.com/FabioTrindade/epub-reader#como-usar" target="_blank" rel="noopener">Ajuda</a>
+</div>
+
+<div id="menu-translate" class="menu" role="menu" aria-label="Tradução em andamento" hidden>
+  <button role="menuitem" id="btn-cancel-translate">Cancelar tradução</button>
+</div>
 
 <div class="app-body">
   <div id="sidebar-scrim" class="scrim" hidden></div>
@@ -64,15 +78,9 @@
   </aside>
 
   <main class="reading-area">
-    <div id="translate-bar" class="translate-bar" hidden>
-      <div class="progress"><div id="translate-progress" class="progress-fill"></div></div>
-      <span id="translate-label">Traduzindo…</span>
-      <button id="btn-cancel-translate" class="text-btn">Cancelar</button>
-    </div>
-
     <div id="mobile-tabs" class="mobile-tabs" hidden role="group" aria-label="Original ou tradução">
-      <button data-mobile-mode="original" class="is-active">Original</button>
-      <button data-mobile-mode="translated">Traduzido</button>
+      <button data-mobile-mode="original" class="is-active" aria-pressed="true">Original</button>
+      <button data-mobile-mode="translated" aria-pressed="false">Tradução</button>
     </div>
 
     <div id="viewport" class="viewport" tabindex="-1"></div>
@@ -99,6 +107,9 @@
 </div>
 
 <footer class="app-footer">
+  <button id="btn-toc" class="icon-btn" aria-label="Abrir sumário" title="Sumário">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
+  </button>
   <button id="btn-prev" class="nav-btn" aria-label="Capítulo anterior">&#9664;</button>
   <div class="footer-center">
     <span id="chapter-label" class="muted">—</span>
