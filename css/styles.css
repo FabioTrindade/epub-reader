@@ -1,0 +1,1123 @@
+/* ============================================================================
+   EPUB Reader — estilos
+   Tema por custom properties: paleta clara no :root, escura redefinida tanto
+   por prefers-color-scheme quanto por [data-theme], para o botão vencer nos
+   dois sentidos.
+   ========================================================================== */
+
+:root {
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --surface-2: #f2f0ec;
+  --fg: #1c1a17;
+  --muted: #6b6560;
+  --border: #e0dcd5;
+  --accent: #8b5e34;
+  --accent-fg: #ffffff;
+  --trans-bg: #f5f2ed;
+  --trans-fg: #3d3a35;
+  --info: #4a6fa5;
+  --warn: #b07a1e;
+  --error: #b3261e;
+  --shadow: 0 6px 24px rgba(28, 26, 23, .12);
+
+  --font-serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: var(--font-sans);
+
+  --reader-font-size: 18px;
+  --reader-line-height: 1.7;
+  --reader-font-family: var(--font-serif);
+
+  --header-h: 56px;
+  --footer-h: 52px;
+  --sidebar-w: 280px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16161a;
+    --surface: #1e1e23;
+    --surface-2: #26262c;
+    --fg: #e8e6e3;
+    --muted: #9b9691;
+    --border: #33333a;
+    --accent: #d2a06a;
+    --accent-fg: #1c1a17;
+    --trans-bg: #232329;
+    --trans-fg: #c9c5c0;
+    --info: #7da2d9;
+    --warn: #e0a942;
+    --error: #e5716a;
+    --shadow: 0 6px 24px rgba(0, 0, 0, .45);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #16161a;
+  --surface: #1e1e23;
+  --surface-2: #26262c;
+  --fg: #e8e6e3;
+  --muted: #9b9691;
+  --border: #33333a;
+  --accent: #d2a06a;
+  --accent-fg: #1c1a17;
+  --trans-bg: #232329;
+  --trans-fg: #c9c5c0;
+  --info: #7da2d9;
+  --warn: #e0a942;
+  --error: #e5716a;
+  --shadow: 0 6px 24px rgba(0, 0, 0, .45);
+}
+
+* { box-sizing: border-box; }
+
+/* Uma regra de autor com `display` vence o [hidden] da folha do navegador —
+   sem este !important, .translate-bar e .mobile-tabs ficam visíveis mesmo
+   marcadas como hidden. */
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  overflow: hidden;
+}
+
+body.is-busy { cursor: progress; }
+
+.muted { color: var(--muted); }
+.small { font-size: .82rem; }
+
+svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  left: 8px; top: 8px; z-index: 100;
+  padding: .5rem .8rem;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: 6px;
+}
+
+/* --------------------------------- botões --------------------------------- */
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+button:disabled { opacity: .35; cursor: not-allowed; }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  color: var(--fg);
+  transition: background .15s;
+}
+.icon-btn:hover { background: var(--surface-2); }
+
+.small-btn {
+  width: 28px; height: 28px;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+
+.text-btn {
+  padding: .45rem .7rem;
+  border-radius: 7px;
+  color: var(--accent);
+  font-size: .88rem;
+}
+.text-btn:hover { background: var(--surface-2); }
+
+.primary-btn {
+  display: inline-block;
+  padding: .65rem 1.3rem;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --------------------------------- header --------------------------------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  height: var(--header-h);
+  padding: 0 .7rem;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-title { min-width: 0; flex: 1; }
+.app-title h1 {
+  margin: 0;
+  font-size: .98rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-title p {
+  margin: 0;
+  font-size: .78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: .2rem;
+}
+
+.mode-switch {
+  display: flex;
+  margin-right: .4rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.mode-switch button {
+  padding: .4rem .7rem;
+  font-size: .82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.mode-switch button.is-active {
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+
+.badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--info);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+.badge[data-level="warn"] { background: var(--warn); }
+.badge[data-level="error"] { background: var(--error); }
+
+/* ---------------------------------- corpo --------------------------------- */
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-tabs button {
+  flex: 1;
+  padding: .7rem .4rem;
+  font-size: .85rem;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+.sidebar-tabs button[aria-selected="true"] {
+  color: var(--fg);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+
+.sidebar-search { padding: .6rem; }
+.sidebar-search input {
+  width: 100%;
+  padding: .45rem .6rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: .85rem;
+}
+
+.sidebar-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+.toc-item {
+  display: block;
+  width: 100%;
+  padding: .5rem .9rem;
+  font-size: .85rem;
+  line-height: 1.35;
+  text-align: left;
+  color: var(--fg);
+  border-left: 3px solid transparent;
+}
+.toc-item:hover { background: var(--surface-2); }
+.toc-item.is-active {
+  background: var(--surface-2);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+.bookmark-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .3rem;
+  padding: .2rem .5rem;
+}
+.bookmark-go {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  padding: .5rem;
+  border-radius: 7px;
+  text-align: left;
+  font-size: .85rem;
+}
+.bookmark-go:hover { background: var(--surface-2); }
+.bookmark-go span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.empty { padding: 1rem; line-height: 1.5; }
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  background: rgba(0, 0, 0, .4);
+}
+
+/* --------------------------------- leitura -------------------------------- */
+
+.reading-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.viewport {
+  flex: 1;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  /* O texto ocupa a largura toda; as marcas de margem (.is-marked, .has-bookmark)
+     ficam até 1.5rem à esquerda dele e precisam caber dentro deste padding. */
+  padding: 2rem 2rem 4rem;
+}
+
+.chapter-content {
+  font-family: var(--reader-font-family);
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  hyphens: auto;
+}
+
+.chapter-content h1, .chapter-content h2, .chapter-content h3,
+.chapter-content h4, .chapter-content h5, .chapter-content h6 {
+  line-height: 1.25;
+  margin: 2em 0 .6em;
+}
+.chapter-content p { margin: 0 0 1em; }
+.chapter-content img {
+  max-width: 100%;
+  /* Com o texto em largura total, uma ilustração grande cresceria até não
+     caber mais na tela. */
+  max-height: 85vh;
+  height: auto;
+  display: block;
+  margin: 1.5em auto;
+  border-radius: 4px;
+}
+.chapter-content blockquote {
+  margin: 1.2em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+.chapter-content a { color: var(--accent); }
+.chapter-content a.dead-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: text;
+}
+.chapter-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: .9em;
+}
+.chapter-content th, .chapter-content td {
+  padding: .4em .6em;
+  border: 1px solid var(--border);
+}
+.chapter-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+/* ----------------------------- grid bilíngue ------------------------------ */
+
+.tr-trans {
+  color: var(--trans-fg);
+  font-size: .96em;
+}
+.tr-trans:empty { display: none; }
+.tr-trans.is-empty::after {
+  content: '—';
+  color: var(--muted);
+}
+
+.mode-original .tr-trans { display: none; }
+.mode-translated .tr-orig { display: none; }
+
+.mode-split .tr-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 2rem;
+  align-items: start;
+}
+.mode-split .tr-trans {
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+}
+/* Em listas o marcador precisa continuar do lado de fora do grid. */
+.mode-split li.tr-row { display: list-item; }
+.mode-split li.tr-row > .tr-orig,
+.mode-split li.tr-row > .tr-trans { display: block; }
+
+/* ---------------------------- marcador de linha --------------------------- */
+
+/* Paleta do marcador. Cada cor tem um valor para tema claro e outro para o
+   escuro: como o texto do parágrafo inteiro recebe a cor, derivá-la por
+   color-mix arriscaria contraste insuficiente num dos dois temas. */
+:root                            { --mark-hue: #9a5b12; }
+:root[data-mark-color="green"]   { --mark-hue: #1c6b3a; }
+:root[data-mark-color="blue"]    { --mark-hue: #1d5fa8; }
+:root[data-mark-color="pink"]    { --mark-hue: #a6306b; }
+:root[data-mark-color="purple"]  { --mark-hue: #6b3fa0; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])                           { --mark-hue: #e0a942; }
+  :root:not([data-theme="light"])[data-mark-color="green"]  { --mark-hue: #5cc98a; }
+  :root:not([data-theme="light"])[data-mark-color="blue"]   { --mark-hue: #6ba8e8; }
+  :root:not([data-theme="light"])[data-mark-color="pink"]   { --mark-hue: #ef7fb0; }
+  :root:not([data-theme="light"])[data-mark-color="purple"] { --mark-hue: #b18ce8; }
+}
+
+:root[data-theme="dark"]                           { --mark-hue: #e0a942; }
+:root[data-theme="dark"][data-mark-color="green"]  { --mark-hue: #5cc98a; }
+:root[data-theme="dark"][data-mark-color="blue"]   { --mark-hue: #6ba8e8; }
+:root[data-theme="dark"][data-mark-color="pink"]   { --mark-hue: #ef7fb0; }
+:root[data-theme="dark"][data-mark-color="purple"] { --mark-hue: #b18ce8; }
+
+.tr-row { position: relative; }
+
+/* Barra na margem via ::before: um border-left empurraria o texto e faria o
+   parágrafo marcado desalinhar dos demais. */
+.tr-row.is-marked::before {
+  content: '';
+  position: absolute;
+  left: -.85rem;
+  top: -.15em;
+  bottom: -.15em;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--mark-hue);
+}
+
+.tr-row.is-marked {
+  background: color-mix(in srgb, var(--mark-hue) 9%, transparent);
+  border-radius: 3px;
+  box-shadow: 0 0 0 .35rem color-mix(in srgb, var(--mark-hue) 9%, transparent);
+}
+
+/* O texto em si muda de cor — é o que faz a linha saltar aos olhos ao reabrir
+   o livro, mais que o fundo sozinho. */
+.tr-row.is-marked .tr-orig,
+.tr-row.is-marked .tr-trans {
+  color: var(--mark-hue);
+}
+
+/* Marcador de seleção: a frase que você escolheu, destacada como marca-texto.
+   Este é o caso comum — marcar o parágrafo inteiro só acontece quando não há
+   nada selecionado. */
+mark.reading-mark {
+  background: color-mix(in srgb, var(--mark-hue) 26%, transparent);
+  color: inherit;
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--mark-hue) 26%, transparent),
+    inset 0 -2px 0 var(--mark-hue);
+  padding: 0 1px;
+}
+
+/* Ao voltar ao marcador, um pulso curto: rolar até uma frase curta no meio da
+   página passa despercebido sem ele. */
+@keyframes mark-pulse {
+  0%, 100% { background: color-mix(in srgb, var(--mark-hue) 26%, transparent); }
+  35%      { background: color-mix(in srgb, var(--mark-hue) 70%, transparent); }
+}
+.mark-pulse { animation: mark-pulse 700ms ease-in-out 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mark-pulse { animation: none; outline: 2px solid var(--mark-hue); outline-offset: 2px; }
+}
+
+/* Fita do trecho salvo: pontilhada e em cinza, deliberadamente mais fraca que
+   a barra sólida e colorida do "parei aqui" — são coisas diferentes. */
+.tr-row.has-bookmark::after {
+  content: '';
+  position: absolute;
+  left: -.85rem;
+  top: -.15em;
+  bottom: -.15em;
+  width: 3px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    var(--muted) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+/* Quando o parágrafo tem os dois, a fita sai da frente da barra. */
+.tr-row.is-marked.has-bookmark::after { left: -1.5rem; }
+
+/* Botões do rodapé: rótulo em texto, porque dois ícones parecidos lado a lado
+   não deixam claro qual faz o quê. */
+.footer-action {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  height: 34px;
+  padding: 0 .7rem;
+  border-radius: 9px;
+  color: var(--muted);
+  font-size: .82rem;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.footer-action:hover { background: var(--surface-2); color: var(--fg); }
+.footer-action svg { width: 17px; height: 17px; }
+.footer-action.is-mark:hover { color: var(--mark-hue); }
+
+/* Estado "remover": o botão avisa o que o próximo clique faz, em vez de
+   silenciosamente mover a marca que você acabou de fazer. */
+.footer-action.is-remove { color: var(--mark-hue); }
+.footer-action.is-remove:hover { color: var(--error); background: var(--surface-2); }
+
+.mark-handle {
+  position: fixed;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1;
+  opacity: .55;
+  transition: opacity .12s, color .12s;
+}
+.mark-handle::before { content: '▸'; }
+.mark-handle:hover {
+  opacity: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.goto-mark {
+  position: absolute;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem .9rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: .82rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+.goto-mark svg { width: 16px; height: 16px; stroke-width: 2; }
+.goto-mark:hover { filter: brightness(1.08); }
+
+mark.dict-highlight {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: inherit;
+  border-radius: 3px;
+}
+
+/* ------------------------------ barra tradução ---------------------------- */
+
+.translate-bar {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .5rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: .85rem;
+}
+
+.progress {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.progress.thin { height: 3px; }
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width .25s;
+}
+
+.mobile-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.mobile-tabs button {
+  flex: 1;
+  padding: .6rem;
+  font-size: .85rem;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+.mobile-tabs button.is-active {
+  color: var(--fg);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+
+/* --------------------------------- welcome -------------------------------- */
+
+.welcome {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  padding: 2rem 1.5rem 4rem;
+  background: var(--bg);
+}
+
+.drop-zone {
+  max-width: 520px;
+  margin: 1rem auto 2.5rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  transition: border-color .15s, background .15s;
+}
+.drop-zone.is-over {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+.drop-icon { width: 40px; height: 40px; color: var(--muted); }
+.drop-zone h2 { margin: .6rem 0 .4rem; font-size: 1.2rem; }
+.drop-zone p { margin: 0 0 1.4rem; line-height: 1.55; font-size: .88rem; }
+
+.library { max-width: 900px; margin: 0 auto; }
+.library h3 { font-size: .95rem; margin: 0 0 .9rem; }
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.1rem;
+}
+
+.book-card { position: relative; }
+.book-open {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+}
+.book-cover {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.book-open img, .book-placeholder {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+/* Barra de leitura na base da capa: legível sobre qualquer imagem graças à
+   faixa escura de fundo. */
+.book-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: rgba(0, 0, 0, .55);
+}
+.book-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width .3s;
+}
+.book-bar.is-done span { background: #3fa76a; }
+.book-placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+.book-meta {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  font-size: .82rem;
+  line-height: 1.3;
+}
+/* Capítulo à esquerda, percentual à direita, mesma cor. */
+.book-progress {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .4rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.book-progress.is-single { display: block; }
+.book-progress.muted { color: var(--muted); font-weight: 400; }
+.book-progress.is-done { color: #3fa76a; }
+
+/* O capítulo cede espaço primeiro: o percentual nunca deve quebrar linha. */
+.book-chapter {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.book-percent { flex-shrink: 0; }
+
+.book-delete {
+  position: absolute;
+  top: .3rem;
+  right: .3rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity .15s;
+}
+.book-card:hover .book-delete,
+.book-delete:focus-visible { opacity: 1; }
+
+/* --------------------------------- footer --------------------------------- */
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  height: var(--footer-h);
+  padding: 0 1rem;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.nav-btn {
+  padding: .4rem .8rem;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+.nav-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--fg); }
+
+.footer-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  min-width: 0;
+}
+#chapter-label {
+  font-size: .8rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -------------------------------- diálogos -------------------------------- */
+
+.dialog {
+  width: min(480px, calc(100vw - 2rem));
+  max-height: min(600px, calc(100vh - 4rem));
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: var(--shadow);
+}
+.dialog::backdrop { background: rgba(0, 0, 0, .45); }
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem .7rem;
+  border-bottom: 1px solid var(--border);
+}
+.dialog-head h2 { margin: 0; font-size: 1rem; }
+.dialog-head .icon-btn { font-size: 1.4rem; }
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .4rem;
+  padding: .6rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ----------------------------- notificações ------------------------------- */
+
+.notif-list {
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: .5rem;
+}
+
+.notif {
+  padding: .7rem .8rem;
+  border-radius: 9px;
+  border-left: 3px solid var(--border);
+  margin-bottom: .4rem;
+  background: var(--surface-2);
+}
+.notif-info { border-left-color: var(--info); }
+.notif-warn { border-left-color: var(--warn); }
+.notif-error { border-left-color: var(--error); }
+
+.notif-head {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .88rem;
+}
+.notif-head strong { flex: 1; font-weight: 600; }
+.notif-icon { font-size: .9rem; }
+.notif-info .notif-icon { color: var(--info); }
+.notif-warn .notif-icon { color: var(--warn); }
+.notif-error .notif-icon { color: var(--error); }
+
+.notif-count {
+  padding: .05rem .4rem;
+  border-radius: 8px;
+  background: var(--border);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.notif-count:empty { display: none; }
+
+.notif-detail { margin: .35rem 0 .3rem; line-height: 1.45; }
+
+.notif-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .7rem;
+  color: var(--muted);
+}
+
+.diagnostic-fallback {
+  width: 100%;
+  height: 160px;
+  margin-bottom: .6rem;
+  padding: .5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-monospace, monospace;
+  font-size: .72rem;
+}
+
+/* ------------------------------ configurações ----------------------------- */
+
+.settings {
+  padding: 1rem 1.1rem 1.4rem;
+  overflow-y: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  margin-bottom: 1.1rem;
+  font-size: .88rem;
+}
+.field > span {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+.field output { font-weight: 400; color: var(--muted); }
+
+/* Amostra ao vivo da cor do marcador. Especificidade maior que `.field > span`
+   para escapar do estilo de rótulo. */
+.field > .mark-preview {
+  position: relative;
+  display: block;
+  margin-top: .45rem;
+  padding: .4rem .6rem .4rem .7rem;
+  border-radius: 3px;
+  font-family: var(--font-serif);
+  font-size: .88rem;
+  font-weight: 400;
+  color: var(--mark-hue);
+  background: color-mix(in srgb, var(--mark-hue) 9%, transparent);
+}
+.field > .mark-preview::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .25rem;
+  bottom: .25rem;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--mark-hue);
+}
+
+.field input[type="range"] { width: 100%; accent-color: var(--accent); }
+.field select {
+  padding: .5rem .6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: .88rem;
+}
+
+/* --------------------------------- toasts --------------------------------- */
+
+.toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(var(--footer-h) + 1rem + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  max-width: min(340px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  gap: .6rem;
+  padding: .7rem .85rem;
+  border-radius: 10px;
+  border-left: 3px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: .85rem;
+  opacity: 1;
+  transition: opacity .3s, transform .3s;
+}
+.toast.leaving { opacity: 0; transform: translateX(12px); }
+.toast strong { display: block; }
+.toast p { margin: .15rem 0 0; line-height: 1.4; }
+.toast-info { border-left-color: var(--info); }
+.toast-warn { border-left-color: var(--warn); }
+.toast-error { border-left-color: var(--error); }
+.toast-info .toast-icon { color: var(--info); }
+.toast-warn .toast-icon { color: var(--warn); }
+.toast-error .toast-icon { color: var(--error); }
+
+/* ------------------------------- dicionário ------------------------------- */
+
+.dict-popup {
+  position: fixed;
+  z-index: 70;
+  width: min(300px, calc(100vw - 2rem));
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-family: var(--font-ui);
+  font-size: .85rem;
+}
+
+.dict-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem .4rem .55rem .8rem;
+  border-bottom: 1px solid var(--border);
+}
+.dict-word { font-size: .95rem; }
+.dict-close {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.dict-body {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: .7rem .8rem;
+}
+.dict-translation {
+  margin: 0 0 .5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.dict-group {
+  display: flex;
+  gap: .5rem;
+  padding: .35rem 0;
+  border-top: 1px solid var(--border);
+  line-height: 1.45;
+}
+.dict-pos {
+  flex-shrink: 0;
+  width: 64px;
+  color: var(--muted);
+  font-style: italic;
+  font-size: .78rem;
+}
+.dict-loading, .dict-note, .dict-error { margin: 0; color: var(--muted); }
+.dict-error { color: var(--error); }
+
+/* -------------------------------- responsivo ------------------------------ */
+
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    z-index: 20;
+    padding-top: env(safe-area-inset-top, 0px);
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    box-shadow: var(--shadow);
+  }
+  .sidebar.is-open { transform: translateX(0); }
+}
+
+@media (min-width: 1024px) {
+  .scrim { display: none; }
+  #btn-sidebar { display: none; }
+}
+
+@media (max-width: 768px) {
+  .app-title p { display: none; }
+
+  /* Duas colunas não cabem no celular: o modo vira abas (ver syncMobileTabs). */
+  .mode-switch .split-only { display: none; }
+  .mode-split .tr-row { display: block; }
+  .mode-split .tr-trans {
+    margin-top: .4em;
+    padding: .5em .7em;
+    border-left: 2px solid var(--accent);
+    background: var(--trans-bg);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .viewport { padding: 1.2rem 1.1rem 3rem; }
+  .welcome { padding: 1.2rem 1.1rem 3rem; }
+  .toasts { left: 1rem; right: 1rem; max-width: none; }
+
+  /* Sem espaço para os rótulos: voltam a ser só ícones, com os title/aria
+     intactos para quem precisar confirmar o que cada um faz. */
+  .btn-label { display: none; }
+  .footer-action { padding: 0 .5rem; }
+  .app-footer { gap: .4rem; }
+}
+
+@media (max-width: 420px) {
+  .mode-switch button { padding: .4rem .5rem; font-size: .76rem; }
+  .app-title h1 { font-size: .9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+}
