@@ -17,7 +17,7 @@ livros ficam guardados só no seu computador.
 ![Grátis](https://img.shields.io/badge/pre%C3%A7o-gr%C3%A1tis-brightgreen)
 ![Sem cadastro](https://img.shields.io/badge/cadastro-n%C3%A3o_precisa-brightgreen)
 
-<img src="docs/screenshots/lado-a-lado.png" alt="Capítulo 1 de Moby Dick no modo lado a lado: texto original em inglês à esquerda e tradução em português à direita, alinhados por parágrafo" width="100%">
+<img src="docs/screenshots/lado-a-lado.png" alt="Capítulo 1 de Moby Dick no modo lado a lado: texto original em inglês à esquerda e tradução em português à direita, alinhados por parágrafo, com uma frase destacada como parei aqui" width="100%">
 
 </div>
 
@@ -118,7 +118,7 @@ Para tirar um livro da biblioteca, use o menu **⋯** no card e escolha
 **Remover livro**. Isso apaga também o progresso, as marcas e as traduções
 guardadas daquele livro.
 
-<img src="docs/screenshots/biblioteca.png" alt="Biblioteca com Moby Dick em 2% e Pride and Prejudice em 31%, com a barra de progresso na base da capa" width="100%">
+<img src="docs/screenshots/biblioteca.png" alt="Biblioteca com o card Continuar lendo de Moby Dick, que mostra a frase marcada como parei aqui, e a estante com Moby Dick em 2% e Pride and Prejudice em 31%" width="100%">
 
 ### No celular
 
