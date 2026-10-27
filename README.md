@@ -238,11 +238,13 @@ Um capítulo que já foi traduzido antes aparece pronto, sem "Traduzindo N%".
 <summary><b>A tradução parou ou ficou lenta</b></summary>
 
 O app usa serviços de tradução gratuitos, que limitam o uso quando recebem
-muitos pedidos. Quando isso acontece, o app espera, tenta de novo e, se
-preciso, troca do Google para o MyMemory, que é mais lento. Em **⋯ →
-Notificações**, no topo, você vê o que aconteceu. Se nenhum dos dois responder,
-os parágrafos afetados mostram "Não foi possível traduzir este trecho" com um
-botão **Tentar de novo**: use-o mais tarde, e só o que faltou é pedido de novo.
+muitos pedidos. Quando isso acontece, ou quando um serviço não responde em 10
+segundos, o app tenta de novo e, se preciso, troca do Google para o MyMemory,
+que é mais lento. Em **⋯ → Notificações**, no topo, você vê o que aconteceu.
+Se nenhum dos dois responder, em cerca de um minuto os parágrafos afetados
+mostram "Não foi possível traduzir este trecho" com um botão **Tentar de
+novo**: use-o mais tarde, e só o que faltou é pedido de novo. Para não esperar,
+use **Cancelar tradução**, no indicador "Traduzindo N%".
 </details>
 
 <details>
