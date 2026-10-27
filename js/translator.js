@@ -109,7 +109,9 @@ export class Translator {
         const translated = await this.#translateChunk(chunk, signal);
         for (const [hash, text] of translated) {
           results.set(hash, text);
-          fresh.push({ hash, text });
+          // Falha (null) não vai para o cache: senão o parágrafo passaria a
+          // contar como traduzido e nunca mais seria tentado.
+          if (text) fresh.push({ hash, text });
         }
         done += chunk.length;
         onProgress?.(Math.min(done, total), total);
@@ -186,7 +188,7 @@ export class Translator {
           }
           if (isLastAttempt) {
             notify.error('translate-failed', 'Falha ao traduzir',
-              `${err.message}. Os parágrafos afetados seguem no original.`);
+              `${err.message.replace(/\.$/, '')}. Os parágrafos afetados seguem no original.`);
             return chunk.map(([hash]) => [hash, null]);
           }
         }

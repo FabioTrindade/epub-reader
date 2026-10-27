@@ -128,7 +128,9 @@ export async function getTranslations(bookId, lang, hashes) {
     for (const hash of hashes) {
       const req = store.get(tKey(bookId, lang, hash));
       req.onsuccess = () => {
-        if (req.result) out.set(hash, req.result.text);
+        // Entradas sem texto são falhas que versões anteriores gravavam:
+        // ignorá-las faz esses parágrafos voltarem a ser traduzidos.
+        if (req.result?.text) out.set(hash, req.result.text);
       };
     }
     transaction.oncomplete = () => resolve(out);

@@ -15,6 +15,16 @@ import { readSelection, rangeFromOffsets, wrapRange, unwrap } from './text-range
 import * as storage from './storage.js';
 import * as db from './db.js';
 
+/** "en" → "Inglês", "pt-BR" → "Português (Brasil)", para os cabeçalhos das colunas. */
+function languageName(code) {
+  try {
+    const name = new Intl.DisplayNames(['pt-BR'], { type: 'language' }).of(code);
+    return name ? name[0].toUpperCase() + name.slice(1) : code;
+  } catch {
+    return code;
+  }
+}
+
 export class Reader extends EventTarget {
   #renderer = new ChapterRenderer();
   #translator = null;
@@ -94,6 +104,7 @@ export class Reader extends EventTarget {
     );
 
     this.#prepareBilingual(container);
+    this.#addColumnsHead(container);
     this.#dictionary.attach(container);
 
     this.viewport.textContent = '';
@@ -119,7 +130,7 @@ export class Reader extends EventTarget {
       else this.#restoreScroll(scrollRatio);
     });
 
-    storage.setProgress(this.book.id, { chapterIndex: clamped, scrollRatio });
+    storage.setProgress(this.book.id, { chapterIndex: clamped, scrollRatio, chapterTitle: chapter.title });
     db.touchBook(this.book.id);
 
     // applyViewMode acima já dispara a tradução quando o modo não é "original";
@@ -144,16 +155,36 @@ export class Reader extends EventTarget {
       const orig = document.createElement('div');
       orig.className = 'tr-orig';
       while (block.firstChild) orig.append(block.firstChild);
-
-      const trans = document.createElement('div');
-      trans.className = 'tr-trans';
-
-      block.append(orig, trans);
+      block.append(orig);
       block.classList.add('tr-row');
+
+      // Bloco sem nenhuma letra (número de capítulo ou de página, "* * *"):
+      // não há o que traduzir, e repeti-lo na coluna da tradução só duplica.
+      // Continua sendo linha — o índice dos blocos ancora marcas e trechos.
+      if (!/\p{L}/u.test(orig.textContent)) {
+        block.classList.add('tr-plain');
+      } else {
+        const trans = document.createElement('div');
+        trans.className = 'tr-trans';
+        block.append(trans);
+      }
+
       // Âncora do bloco: serve ao cache de tradução e ao marcador de leitura.
       block.dataset.hash = hashText(normalize(orig.textContent));
       block.dataset.blockIndex = index;
     });
+  }
+
+  /** "Inglês · original" | "Português (Brasil) · tradução" — o CSS só mostra no lado a lado. */
+  #addColumnsHead(container) {
+    const head = document.createElement('div');
+    head.className = 'columns-head';
+    const orig = document.createElement('span');
+    orig.textContent = `${languageName(this.book.lang || 'en')} · original`;
+    const trans = document.createElement('span');
+    trans.textContent = `${languageName(this.#translator.targetLang)} · tradução`;
+    head.append(orig, trans);
+    container.prepend(head);
   }
 
   applyViewMode(mode) {
@@ -193,7 +224,7 @@ export class Reader extends EventTarget {
   async translate() {
     if (!this.container || !this.#translator) return;
 
-    const rows = [...this.container.querySelectorAll('.tr-row')];
+    const rows = [...this.container.querySelectorAll('.tr-row:not(.tr-plain)')];
     if (!rows.length) return;
 
     const texts = rows.map((r) => r.querySelector('.tr-orig').textContent);
@@ -226,26 +257,34 @@ export class Reader extends EventTarget {
         onProgress: (done, total) => this.#emit('translate-progress', { done, total }),
       });
       if (controller.signal.aborted) return;
-      this.#paint(rows, map);
+      this.#paint(rows, map, { final: true });
       this.container.dataset.translated = '1';
       this.#emit('translate-done', {});
     } catch (err) {
       if (err.message === 'ABORTED') return;
+      this.#paint(rows, new Map(), { final: true });
       this.#emit('translate-error', { error: err });
     } finally {
       if (this.#abort === controller) this.#abort = null;
     }
   }
 
-  #paint(rows, map) {
+  /**
+   * Escreve as traduções que chegaram. Com `final`, não vem mais nada para
+   * este capítulo: o que continuar vazio falhou e troca o esqueleto pelo aviso
+   * com "Tentar de novo". Na pintura parcial (só o cache) os vazios ainda
+   * estão a caminho e ficam como esqueleto.
+   */
+  #paint(rows, map, { final = false } = {}) {
     for (const row of rows) {
       const slot = row.querySelector('.tr-trans');
       const text = map.get(row.dataset.hash);
       if (text) {
         slot.textContent = text;
         slot.classList.remove('is-empty');
-      } else if (!slot.textContent) {
+      } else if (final && !slot.textContent) {
         slot.classList.add('is-empty');
+        slot.append(this.#unavailableNote());
       }
     }
 
@@ -254,6 +293,30 @@ export class Reader extends EventTarget {
     // tradução não existia. Reaplicar aqui cobre os dois casos.
     const mark = this.book ? storage.getReadingMark(this.book.id) : null;
     if (mark && mark.chapterIndex === this.chapterIndex) this.#applyMark();
+  }
+
+  #unavailableNote() {
+    const note = document.createElement('span');
+    note.className = 'tr-unavailable';
+    note.textContent = 'Não foi possível traduzir este trecho. ';
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'tr-retry';
+    retry.textContent = 'Tentar de novo';
+    retry.addEventListener('click', () => this.retryTranslation());
+    note.append(retry);
+    return note;
+  }
+
+  /** "Tentar de novo": só o que falhou vai à rede; o resto sai do cache. */
+  retryTranslation() {
+    if (!this.container) return;
+    for (const slot of this.container.querySelectorAll('.tr-trans.is-empty')) {
+      slot.classList.remove('is-empty');
+      slot.textContent = '';
+    }
+    delete this.container.dataset.translated;
+    this.translate();
   }
 
   /* --------------------------------- progresso -------------------------------- */
@@ -280,6 +343,7 @@ export class Reader extends EventTarget {
     storage.setProgress(this.book.id, {
       chapterIndex: this.chapterIndex,
       scrollRatio: this.scrollRatio,
+      chapterTitle: this.chapter?.title || '',
     });
   }
 
@@ -422,7 +486,7 @@ export class Reader extends EventTarget {
 
     // A coluna marcada pode estar oculta no modo atual, ou a tradução ainda não
     // ter chegado. Destacar o parágrafo inteiro é melhor que não mostrar nada.
-    if (!side || !side.textContent.trim() || side.offsetParent === null) {
+    if (!side || !side.textContent.trim() || side.classList.contains('is-empty') || side.offsetParent === null) {
       row.classList.add('is-marked');
       return row;
     }
@@ -444,9 +508,20 @@ export class Reader extends EventTarget {
     }
   }
 
+  /** Âncora do parágrafo da seleção, com o trecho selecionado como resumo. */
+  selectionAnchor() {
+    if (!this.container) return null;
+    const selection = readSelection(this.container);
+    const anchor = this.rowAnchor(selection?.side.closest('.tr-row'));
+    return anchor && { ...anchor, excerpt: selection.text.slice(0, 120) };
+  }
+
   /** Dados de âncora do parágrafo no topo — base de qualquer marca. */
   currentAnchor() {
-    const row = this.topVisibleRow();
+    return this.rowAnchor(this.topVisibleRow());
+  }
+
+  rowAnchor(row) {
     if (!row || !this.book) return null;
     return {
       chapterIndex: this.chapterIndex,

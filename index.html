@@ -12,41 +12,92 @@
 
 <a class="skip-link" href="#viewport">Pular para o conteúdo</a>
 
-<header class="app-header">
-  <button id="btn-sidebar" class="icon-btn" aria-label="Abrir sumário" aria-expanded="false">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-  </button>
-
-  <div class="app-title">
-    <h1 id="book-title">EPUB Reader</h1>
-    <p id="book-author" class="muted"></p>
-  </div>
-
-  <div class="toolbar">
-    <div class="mode-switch" id="mode-switch" role="group" aria-label="Modo de leitura">
-      <button data-mode="original" class="is-active">Original</button>
-      <button data-mode="split">Lado a lado</button>
-      <button data-mode="translated">Traduzido</button>
+<!-- Biblioteca: tela própria, por cima da leitura (que continua montada por
+     baixo, para voltar ao livro aberto sem reabri-lo). -->
+<section id="welcome" class="library-view" aria-label="Biblioteca">
+  <header class="library-header">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6.5c3-2 6.5-2 9-1v13c-2.5-1-6-1-9 1-3-2-6.5-2-9-1z"/><path d="M12 6.5v13"/></svg>
+      <span>EPUB Reader</span>
     </div>
+    <h1 class="library-title">Biblioteca</h1>
+    <div class="library-actions">
+      <button class="icon-btn aa-btn" data-action="appearance" aria-label="Aparência" title="Aparência">Aa</button>
+      <button class="icon-btn theme-toggle" data-action="theme-toggle" aria-label="Usar tema escuro" title="Tema claro ou escuro">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <label class="add-btn" title="Adicionar livro">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="add-label">Adicionar livro</span>
+        <input type="file" id="file-input" class="epub-input sr-only" accept=".epub,application/epub+zip" aria-label="Adicionar livro">
+      </label>
+    </div>
+  </header>
+  <div id="library" class="library"></div>
+  <footer class="library-note">
+    <span class="note-long">Seus livros, marcas e progresso ficam só neste navegador. Apenas o texto que você traduz é enviado ao serviço de tradução.</span>
+    <span class="note-short">Seus livros ficam só neste navegador.</span>
+  </footer>
+</section>
 
-    <button id="btn-library" class="icon-btn" aria-label="Minha biblioteca" title="Biblioteca">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM4 19.5V21h16"/></svg>
+<header class="app-header">
+  <div class="header-start">
+    <button id="btn-sidebar" class="icon-btn" aria-label="Abrir sumário" aria-expanded="false" title="Sumário">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
     </button>
-
-    <button id="btn-notifications" class="icon-btn" aria-label="Notificações" title="Notificações">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-      <span id="notif-badge" class="badge" hidden>0</span>
+    <button id="btn-back" class="icon-btn" aria-label="Voltar à biblioteca" title="Biblioteca">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
     </button>
+    <div class="app-title">
+      <h1 id="book-title">EPUB Reader</h1>
+      <p id="book-subtitle" class="muted"></p>
+    </div>
+  </div>
 
-    <button id="btn-settings" class="icon-btn" aria-label="Configurações" title="Configurações">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+  <div class="mode-switch" id="mode-switch" role="group" aria-label="Modo de leitura">
+    <button data-mode="original" class="is-active" aria-pressed="true">Original</button>
+    <button data-mode="split" aria-pressed="false">Lado a lado</button>
+    <button data-mode="translated" aria-pressed="false">Tradução</button>
+  </div>
+
+  <div class="header-end">
+    <!-- Só durante a tradução; clicar oferece o "Cancelar tradução". -->
+    <button id="translate-status" class="translate-status" hidden aria-haspopup="menu" aria-expanded="false">
+      <span class="status-dot" aria-hidden="true"></span><span id="translate-label">Traduzindo…</span>
     </button>
-
-    <button id="btn-theme" class="icon-btn" aria-label="Alternar tema" title="Tema">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <button class="icon-btn aa-btn" data-action="appearance" aria-label="Aparência" title="Aparência">Aa</button>
+    <button class="icon-btn theme-toggle" data-action="theme-toggle" aria-label="Usar tema escuro" title="Tema claro ou escuro">
+      <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button id="btn-library" class="icon-btn" aria-label="Biblioteca" title="Biblioteca">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15.5 5l3.6-.9 3 15.4-3.6.9z"/></svg>
+    </button>
+    <button id="btn-more" class="icon-btn" aria-label="Mais opções" title="Notificações e ajuda" aria-haspopup="menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-fill"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      <span id="more-dot" class="more-dot" hidden></span>
     </button>
   </div>
+
+  <div id="translate-line" class="translate-line" hidden><span id="translate-progress"></span></div>
 </header>
+
+<div id="menu-more" class="menu" role="menu" aria-label="Mais opções" hidden>
+  <button role="menuitem" id="btn-notifications">
+    <span>Notificações</span><span id="notif-badge" class="badge" hidden>0</span>
+  </button>
+  <button role="menuitem" id="menu-copy-diagnostic">Copiar diagnóstico</button>
+  <a role="menuitem" href="https://github.com/FabioTrindade/epub-reader#como-usar" target="_blank" rel="noopener">Ajuda</a>
+</div>
+
+<div id="menu-book" class="menu" role="menu" aria-label="Opções do livro" hidden>
+  <button role="menuitem" id="menu-remove-book" class="is-destructive">Remover livro</button>
+</div>
+
+<div id="menu-translate" class="menu" role="menu" aria-label="Tradução em andamento" hidden>
+  <button role="menuitem" id="btn-cancel-translate">Cancelar tradução</button>
+</div>
 
 <div class="app-body">
   <div id="sidebar-scrim" class="scrim" hidden></div>
@@ -64,15 +115,9 @@
   </aside>
 
   <main class="reading-area">
-    <div id="translate-bar" class="translate-bar" hidden>
-      <div class="progress"><div id="translate-progress" class="progress-fill"></div></div>
-      <span id="translate-label">Traduzindo…</span>
-      <button id="btn-cancel-translate" class="text-btn">Cancelar</button>
-    </div>
-
     <div id="mobile-tabs" class="mobile-tabs" hidden role="group" aria-label="Original ou tradução">
-      <button data-mobile-mode="original" class="is-active">Original</button>
-      <button data-mobile-mode="translated">Traduzido</button>
+      <button data-mobile-mode="original" class="is-active" aria-pressed="true">Original</button>
+      <button data-mobile-mode="translated" aria-pressed="false">Tradução</button>
     </div>
 
     <div id="viewport" class="viewport" tabindex="-1"></div>
@@ -82,122 +127,186 @@
       <span>Voltar para onde parei</span>
     </button>
 
-    <section id="welcome" class="welcome">
-      <div class="drop-zone" id="drop-zone">
-        <svg viewBox="0 0 24 24" aria-hidden="true" class="drop-icon"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-        <h2>Abra um livro em EPUB</h2>
-        <p class="muted">Arraste o arquivo aqui ou escolha no seu computador.<br>
-          Nada é enviado para servidor: o livro é lido e guardado no seu navegador.</p>
-        <label class="primary-btn">
-          Escolher arquivo
-          <input type="file" id="file-input" accept=".epub,application/epub+zip" hidden>
-        </label>
-      </div>
-      <div id="library" class="library"></div>
-    </section>
   </main>
 </div>
 
 <footer class="app-footer">
-  <button id="btn-prev" class="nav-btn" aria-label="Capítulo anterior">&#9664;</button>
+  <button id="btn-toc" class="icon-btn" aria-label="Abrir sumário" title="Sumário">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
+  </button>
+  <button id="btn-prev" class="nav-btn" aria-label="Capítulo anterior">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="nav-label">Anterior</span>
+  </button>
   <div class="footer-center">
-    <span id="chapter-label" class="muted">—</span>
+    <div class="footer-status">
+      <span id="chapter-label" class="muted">—</span>
+      <span id="chapter-label-short" class="muted" aria-hidden="true"></span>
+      <!-- "Parei aqui" sem seleção: marca o parágrafo do topo da tela. -->
+      <button id="btn-mark" class="mark-btn"
+              aria-label="Parei aqui: marcar o parágrafo do topo da tela"
+              title="Parei aqui — sem seleção, marca o parágrafo do topo. (M)">
+        <svg class="icon-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 12h7M4 17h11"/><path d="M19 9v9m0 0l-2.5-2.5M19 18l2.5-2.5"/></svg>
+        <svg class="icon-unmark" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 7h11M4 12h7M4 17h11"/><path d="M16 9l6 6m0-6l-6 6"/></svg>
+      </button>
+    </div>
     <div class="progress thin"><div id="reading-progress" class="progress-fill"></div></div>
   </div>
-  <button id="btn-mark" class="footer-action is-mark"
-          aria-label="Parei aqui: marcar o trecho selecionado"
-          title="Parei aqui — selecione um trecho e clique. Sem seleção, marca o parágrafo do topo. (M)">
-    <svg class="icon-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11M4 12h7M4 17h11"/><path d="M19 9v9m0 0l-2.5-2.5M19 18l2.5-2.5"/></svg>
-    <svg class="icon-unmark" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 7h11M4 12h7M4 17h11"/><path d="M16 9l6 6m0-6l-6 6"/></svg>
-    <span class="btn-label">Parei aqui</span>
+  <button id="btn-next" class="nav-btn" aria-label="Próximo capítulo">
+    <span class="nav-label">Próximo</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
   </button>
-  <button id="btn-bookmark" class="footer-action"
-          aria-label="Salvar este trecho na lista lateral"
-          title="Salvar trecho — guarda na aba Trechos salvos (B)">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-    <span class="btn-label">Salvar trecho</span>
-  </button>
-  <button id="btn-next" class="nav-btn" aria-label="Próximo capítulo">&#9654;</button>
 </footer>
 
-<!-- Notificações: o painel de diagnóstico -->
-<dialog id="dlg-notifications" class="dialog">
-  <div class="dialog-head">
-    <h2>Notificações</h2>
-    <button class="icon-btn" data-close aria-label="Fechar">&times;</button>
-  </div>
-  <div id="notif-list" class="notif-list"></div>
-  <div class="dialog-actions">
-    <button id="btn-copy-diagnostic" class="text-btn">Copiar diagnóstico</button>
-    <button id="btn-clear-notifications" class="text-btn">Limpar</button>
-  </div>
-</dialog>
+<!-- Ações do trecho selecionado: aparecem junto da seleção. -->
+<div id="selection-bar" class="selection-bar" role="toolbar" aria-label="Ações do trecho selecionado" hidden>
+  <button id="sel-mark"><span class="mark-swatch" aria-hidden="true"></span><span class="sel-mark-label">Parei aqui</span></button>
+  <button id="sel-save">Salvar</button>
+  <button id="sel-copy">Copiar</button>
+</div>
 
-<dialog id="dlg-settings" class="dialog">
-  <div class="dialog-head">
-    <h2>Configurações</h2>
-    <button class="icon-btn" data-close aria-label="Fechar">&times;</button>
-  </div>
-
-  <div class="settings">
-    <label class="field">
-      <span>Tamanho da fonte <output id="out-font-size"></output></span>
-      <input type="range" id="set-font-size" min="14" max="28" step="1">
-    </label>
-
-    <label class="field">
-      <span>Altura da linha <output id="out-line-height"></output></span>
-      <input type="range" id="set-line-height" min="1.3" max="2.2" step="0.1">
-    </label>
-
-    <label class="field">
-      <span>Fonte</span>
-      <select id="set-font-family">
-        <option value="serif">Serifada</option>
-        <option value="sans">Sem serifa</option>
-      </select>
-    </label>
-
-    <label class="field">
-      <span>Cor do marcador "parei aqui"</span>
-      <select id="set-mark-color">
-        <option value="amber">Âmbar</option>
-        <option value="green">Verde</option>
-        <option value="blue">Azul</option>
-        <option value="pink">Rosa</option>
-        <option value="purple">Roxo</option>
-      </select>
-      <span class="mark-preview" aria-hidden="true">Assim ficará a linha marcada.</span>
-    </label>
-
-    <label class="field">
-      <span>Tema</span>
-      <select id="set-theme">
-        <option value="system">Seguir o sistema</option>
-        <option value="light">Claro</option>
-        <option value="dark">Escuro</option>
-      </select>
-    </label>
-
-    <label class="field">
-      <span>Traduzir para</span>
-      <select id="set-target-lang">
-        <option value="pt-BR">Português (Brasil)</option>
-        <option value="pt-PT">Português (Portugal)</option>
-        <option value="es">Espanhol</option>
-        <option value="fr">Francês</option>
-        <option value="de">Alemão</option>
-        <option value="it">Italiano</option>
-      </select>
-    </label>
-
-    <div class="field">
-      <span>Armazenamento</span>
-      <p id="storage-info" class="muted small">—</p>
-      <button id="btn-clear-cache" class="text-btn">Limpar cache de traduções deste livro</button>
+<!-- Notificações: popover sob o ⋯ no computador, painel no celular. -->
+<dialog id="dlg-notifications" class="sheet notifications" aria-labelledby="notif-title">
+  <span class="sheet-handle" aria-hidden="true"></span>
+  <div class="sheet-view">
+    <div class="sheet-head">
+      <h2 id="notif-title">Notificações</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div id="notif-list" class="notif-list"></div>
+    <div class="notif-actions">
+      <button id="btn-copy-diagnostic" class="text-btn">Copiar diagnóstico</button>
+      <button id="btn-clear-notifications" class="text-btn">Limpar</button>
     </div>
   </div>
 </dialog>
+
+<!-- Aparência: popover ancorado ao "Aa" no computador; painel que sobe do
+     rodapé no celular. Três vistas: principal, idiomas e armazenamento. -->
+<dialog id="dlg-appearance" class="sheet appearance" aria-labelledby="appearance-title">
+  <span class="sheet-handle" aria-hidden="true"></span>
+
+  <div class="sheet-view" data-view="main">
+    <div class="sheet-head">
+      <h2 id="appearance-title">Aparência</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="setting">
+      <span class="setting-label" id="lbl-size">Tamanho do texto</span>
+      <div class="size-stepper" role="group" aria-labelledby="lbl-size">
+        <button id="size-down" class="size-btn size-down" aria-label="Diminuir texto">A</button>
+        <span id="size-dots" class="size-dots" role="img"></span>
+        <button id="size-up" class="size-btn size-up" aria-label="Aumentar texto">A</button>
+      </div>
+    </div>
+
+    <div class="setting-pair">
+      <div class="setting">
+        <span class="setting-label" id="lbl-font">Fonte</span>
+        <div class="segmented" role="group" aria-labelledby="lbl-font">
+          <button data-font="serif" class="font-serif" aria-label="Serifada">Aa</button>
+          <button data-font="sans" class="font-sans" aria-label="Sem serifa">Aa</button>
+        </div>
+      </div>
+      <div class="setting">
+        <span class="setting-label" id="lbl-spacing">Espaçamento</span>
+        <div class="segmented" role="group" aria-labelledby="lbl-spacing">
+          <button data-spacing="1.4" aria-label="Compacto" title="Compacto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
+          <button data-spacing="1.7" aria-label="Normal" title="Normal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h14"/></svg></button>
+          <button data-spacing="2" aria-label="Amplo" title="Amplo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14M5 12h14M5 19.5h14"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting">
+      <span class="setting-label" id="lbl-theme">Tema</span>
+      <div class="theme-cards" role="group" aria-labelledby="lbl-theme">
+        <button data-theme-choice="light"><span class="theme-thumb thumb-light" aria-hidden="true"></span>Claro</button>
+        <button data-theme-choice="dark"><span class="theme-thumb thumb-dark" aria-hidden="true"></span>Escuro</button>
+        <button data-theme-choice="system"><span class="theme-thumb thumb-system" aria-hidden="true"></span>Sistema</button>
+      </div>
+    </div>
+
+    <div class="setting">
+      <span class="setting-label" id="lbl-mark">Cor da marca “parei aqui”</span>
+      <div class="swatches" role="group" aria-labelledby="lbl-mark">
+        <button class="swatch" data-color="amber" aria-label="Âmbar"></button>
+        <button class="swatch" data-color="green" aria-label="Verde"></button>
+        <button class="swatch" data-color="blue" aria-label="Azul"></button>
+        <button class="swatch" data-color="pink" aria-label="Rosa"></button>
+        <button class="swatch" data-color="purple" aria-label="Roxo"></button>
+      </div>
+    </div>
+
+    <div class="setting-rows">
+      <button class="setting-row" data-goto="languages">
+        <span>Traduzir para</span>
+        <span class="row-value"><span id="lang-current"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <button class="setting-row" data-goto="storage">
+        <span>Armazenamento e diagnóstico</span>
+        <span class="row-value"><span id="storage-short"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <!-- No celular o indicador "Traduzindo N%" não cabe no topo: cancelar fica aqui. -->
+      <button class="setting-row cancel-row" id="appearance-cancel">
+        <span>Cancelar tradução</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="sheet-view" data-view="languages" hidden>
+    <div class="sheet-head">
+      <button class="icon-btn" data-goto="main" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <h2>Traduzir para</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="choice-list" role="group" aria-label="Idioma da tradução">
+      <button data-lang="pt-BR">Português (Brasil)</button>
+      <button data-lang="pt-PT">Português (Portugal)</button>
+      <button data-lang="es">Espanhol</button>
+      <button data-lang="fr">Francês</button>
+      <button data-lang="de">Alemão</button>
+      <button data-lang="it">Italiano</button>
+    </div>
+  </div>
+
+  <div class="sheet-view" data-view="storage" hidden>
+    <div class="sheet-head">
+      <button class="icon-btn" data-goto="main" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <h2>Armazenamento e diagnóstico</h2>
+      <button class="icon-btn sheet-close" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p id="storage-info" class="storage-info">—</p>
+    <div class="setting-rows">
+      <button class="setting-row" id="btn-clear-cache"><span>Limpar cache de traduções deste livro</span></button>
+      <button class="setting-row" id="appearance-copy-diagnostic"><span>Copiar diagnóstico</span></button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Confirmação de ações (remover livro): título, texto curto e dois botões. -->
+<dialog id="dlg-confirm" class="confirm" aria-labelledby="confirm-title">
+  <h2 id="confirm-title"></h2>
+  <p id="confirm-text"></p>
+  <div class="confirm-actions">
+    <button class="text-btn" value="cancel" data-close>Cancelar</button>
+    <button class="confirm-ok" id="confirm-ok"></button>
+  </div>
+</dialog>
+
+<!-- Arrastar um arquivo para qualquer lugar da janela. -->
+<div id="drop-overlay" class="drop-overlay" hidden><span>Solte para abrir</span></div>
 
 <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
 

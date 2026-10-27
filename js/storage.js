@@ -15,13 +15,14 @@ const KEYS = {
 };
 
 export const DEFAULT_PREFS = {
-  fontSize: 18,
+  fontSize: null,        // null: padrão do aparelho (19px, 18px no celular)
   lineHeight: 1.7,
   theme: 'system',       // 'light' | 'dark' | 'system'
   targetLang: 'pt-BR',
   viewMode: 'split',     // 'original' | 'translated' | 'split'
   fontFamily: 'serif',   // 'serif' | 'sans'
   markColor: 'amber',    // cor do marcador "parei aqui"
+  sidebarCollapsed: false, // sumário recolhido no computador
 };
 
 function read(key, fallback) {
@@ -63,9 +64,14 @@ export function getProgress(bookId) {
   return read(KEYS.progress, {})[bookId] || null;
 }
 
-export function setProgress(bookId, { chapterIndex, scrollRatio }) {
+/**
+ * `chapterTitle` é o título da entrada do sumário: a biblioteca mostra onde o
+ * leitor está sem reabrir o livro. Contar entradas ("Capítulo 12 de 29")
+ * mentiria, porque capa, prefácio e partes também são entradas.
+ */
+export function setProgress(bookId, { chapterIndex, scrollRatio, chapterTitle = '' }) {
   const all = read(KEYS.progress, {});
-  all[bookId] = { chapterIndex, scrollRatio, updatedAt: Date.now() };
+  all[bookId] = { chapterIndex, scrollRatio, chapterTitle, updatedAt: Date.now() };
   write(KEYS.progress, all);
 }
 

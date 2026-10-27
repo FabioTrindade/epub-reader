@@ -5,20 +5,23 @@ Este documento é para quem vai ler ou modificar o código. Para usar o app, vej
 
 O projeto é HTML, CSS e JavaScript puros, com módulos ES nativos: sem build, sem
 framework e sem `npm install`. A única dependência é o JSZip, vendorizado em
-`lib/`.
+`lib/`. O visual segue [DESIGN.md](DESIGN.md), que é a fonte da verdade para
+tokens, componentes e telas.
 
 ## Estrutura
 
 ```
 index.html            UI completa
-css/styles.css        tokens de tema, responsivo, dark mode
+css/styles.css        fontes, tokens de tema, responsivo, dark mode
+fonts/                Literata e Inter (woff2, licença OFL)
 js/
   main.js             entry point: liga os módulos ao DOM
   epub-parser.js      zip → capítulos (recorte por fragmento)
   renderer.js         sanitiza XHTML, resolve imagens e links
   translator.js       cache, chunking, retry, fallback
   providers/          google-gtx.js (padrão) · mymemory.js (fallback)
-  dictionary.js       clique-na-palavra + popup
+  dictionary.js       clique-na-palavra: popover ou painel no celular
+  ui.js               menus, painéis, biblioteca, aparência, notificações
   reader.js           capítulo atual, navegação, progresso
   storage.js          localStorage: prefs, progresso, marcadores, "parei aqui"
   text-range.js       seleção ↔ offsets de texto estáveis
@@ -27,7 +30,34 @@ js/
 lib/jszip.min.js      única dependência externa
 ```
 
+## Publicação no GitHub Pages
+
+O site oficial, <https://fabiotrindade.github.io/epub-reader/>, é servido pelo
+GitHub Pages a partir da branch `main`, pasta raiz (**Settings → Pages →
+Deploy from a branch → `main` / `(root)`**). Como tudo são arquivos estáticos,
+publicar é fazer push na `main`: o Pages republica sozinho em alguns minutos.
+O Pages serve por HTTPS, que é o contexto seguro de que o app precisa (veja
+abaixo).
+
+Três cuidados:
+
+- O app fica num subcaminho (`/epub-reader/`), então todo caminho no HTML, no
+  CSS e no JS é relativo (`css/styles.css`, `./db.js`, `../fonts/…`). Um
+  caminho absoluto (`/css/…`) funcionaria no `localhost` e quebraria no Pages.
+- O servidor do Pages diferencia maiúsculas de minúsculas, ao contrário do
+  macOS: o nome usado no código precisa bater exatamente com o do arquivo.
+- O Pages manda os arquivos com cache de cerca de 10 minutos. Logo depois de
+  publicar, recarregue com `Cmd+Shift+R` (ou `Ctrl+Shift+R`) para ver a
+  versão nova.
+
+**Sua própria cópia:** faça um fork do repositório e ative o Pages no fork do
+mesmo jeito. Ela fica em `https://<seu-usuario>.github.io/epub-reader/`. Os
+dados de cada leitor ficam no navegador dele, separados por endereço: uma
+cópia não enxerga a biblioteca da outra.
+
 ## Rodando localmente
+
+Para desenvolver, sirva a pasta com qualquer servidor estático:
 
 ```bash
 python3 -m http.server 8000
@@ -37,7 +67,8 @@ python3 -m http.server 8000
 Precisa mesmo de um servidor — abrir o `index.html` direto pelo `file://` não
 funciona, porque os módulos ES não carregam nesse protocolo e o `crypto.subtle`
 (usado para identificar o livro) fica indisponível fora de contexto seguro. Se
-isso acontecer, o app avisa no sino em vez de falhar em silêncio.
+isso acontecer, o app avisa em Notificações (menu ⋯) em vez de falhar em
+silêncio.
 
 Qualquer servidor estático serve: `npx serve`, `php -S localhost:8000`, etc.
 
@@ -60,9 +91,10 @@ primeiro pedaço; *Team Topologies* tem 16 arquivos assim em 44. Cada pedaço
 continua sendo um capítulo interno — as setas passam por ele e progresso,
 marcadores e "parei aqui" guardam as mesmas posições —, mas herda o título da
 entrada anterior e acende ela na lateral. A capa embrulhada num xhtml antes da
-primeira entrada herda da seguinte. O contador do rodapé e o "Capítulo X de N"
-da biblioteca contam pela lateral. Sem sumário utilizável, cada arquivo do
-spine continua sendo um item.
+primeira entrada herda da seguinte. O rodapé e a biblioteca mostram o título
+dessa entrada, nunca uma contagem: "Capítulo 12 de 29" contaria entradas do
+sumário (capa, prefácio, partes) e contradiria a numeração do livro. Sem
+sumário utilizável, cada arquivo do spine continua sendo um item.
 
 **Tradução em lote com re-alinhamento.** Um request por parágrafo seria lento
 demais; o capítulo inteiro de uma vez perderia a correspondência. O meio-termo
@@ -86,8 +118,36 @@ permanece no lugar. Envolvê-lo num `<div>` externo quebraria `<li>` dentro de
 (preferências, progresso, marcadores). Livro e cache de tradução vão para o
 IndexedDB: localStorage tem ~5MB e bloqueia a thread principal.
 
+**Bloco sem letras não ganha coluna de tradução.** Número de capítulo numa
+tabela de layout (Team Topologies), número de página na lista de ilustrações
+(Pride and Prejudice), "* * * * * *" (Moby Dick): repetir na tradução só
+duplicava, e uma célula de tabela virando grade desmontava a tabela. O bloco
+continua sendo `.tr-row` (com a classe `.tr-plain`), porque o índice dos
+blocos ancora marcas e trechos salvos; só não tem `.tr-trans` nem vai ao
+tradutor, e mantém o display de origem (`revert`).
+
+**Blockquotes aninhados contam como um só.** O Calibre faz recuo aninhando
+blockquotes (dez níveis numa assinatura de epígrafe); como o CSS do livro é
+descartado, só o de fora desenha a barra e o recuo.
+
 **O CSS do próprio livro é descartado de propósito.** É a principal causa de
 texto ilegível no dark mode. A tipografia vem das preferências do leitor.
+
+**As fontes são servidas pelo próprio app.** Literata (texto) e Inter
+(interface) ficam em `fonts/`, nos subconjuntos latin e latin-ext, com
+`unicode-range` para o segundo só baixar quando preciso. Carregá-las do Google
+Fonts mandaria um pedido a terceiros a cada visita, o que contradiria a seção
+de privacidade do README.
+
+**Falha de tradução não vai para o cache.** Um parágrafo que falha volta como
+`null` e não é gravado; entradas sem texto já gravadas são ignoradas na
+leitura. Senão o capítulo pareceria todo em cache e aqueles parágrafos nunca
+mais seriam tentados. O aviso "Não foi possível traduzir este trecho" só
+aparece na pintura final, quando não vem mais nada para o capítulo.
+
+**No celular, a vista vem da aba, não da preferência.** O `Reader` reaplica a
+cada capítulo o último modo que recebeu por `applyViewMode`; no celular é a
+aba Original/Tradução, já que "Lado a lado" não cabe ali.
 
 ## Percentual de leitura
 
@@ -136,9 +196,10 @@ a exigir API key (`libretranslate.de` hoje redireciona para
 (`translateBatch`, `lookupWord`, `maxChunkChars`) e registre em `PROVIDERS`, no
 topo de `js/translator.js`.
 
-## Sino de diagnóstico
+## Notificações e diagnóstico
 
-Em vez de `console.warn`, todo evento vai para a central de notificações. Eventos
+Em vez de `console.warn`, todo evento vai para a central de notificações (menu
+⋯ → Notificações; um ponto sobre o ⋯ avisa quando há aviso ou erro). Eventos
 do mesmo tipo são **coalescidos** (`×3`), para que um capítulo com muitas falhas
 gere uma linha e não quarenta. Só `warn` e `error` também disparam toast. O botão
 "copiar diagnóstico" gera um relatório com navegador, versão e histórico.
@@ -170,8 +231,14 @@ Validado ponta a ponta no Chrome com dois livros do Project Gutenberg:
 `nav.xhtml`, 65 capítulos, com imagens). Cobertura: parsing dos dois formatos,
 capa e imagens como blob, tradução completa com verificação de alinhamento,
 cache (zero requests ao revisitar), dicionário, persistência entre recargas,
-fallback de provider com os dois endpoints bloqueados, coalescing do sino,
-responsivo a 390px e os três temas.
+fallback de provider com os dois endpoints bloqueados, coalescing das
+notificações, responsivo a 390px e os três temas.
+
+O redesign foi validado também com o Chrome headless dirigido por CDP: o mesmo
+roteiro na versão anterior e na nova (sumário, navegação por setas, "parei
+aqui" por seleção, trecho salvo, reabertura na marca) deu resultado idêntico, e
+a tradução indisponível foi testada bloqueando os dois serviços com
+`Network.setBlockedURLs`.
 
 Os EPUBs de teste ficam em `test-books/`, que está no `.gitignore`. Para
 reproduzir, baixe do Project Gutenberg e salve com estes nomes:
