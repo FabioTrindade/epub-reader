@@ -30,7 +30,34 @@ js/
 lib/jszip.min.js      única dependência externa
 ```
 
+## Publicação no GitHub Pages
+
+O site oficial, <https://fabiotrindade.github.io/epub-reader/>, é servido pelo
+GitHub Pages a partir da branch `main`, pasta raiz (**Settings → Pages →
+Deploy from a branch → `main` / `(root)`**). Como tudo são arquivos estáticos,
+publicar é fazer push na `main`: o Pages republica sozinho em alguns minutos.
+O Pages serve por HTTPS, que é o contexto seguro de que o app precisa (veja
+abaixo).
+
+Três cuidados:
+
+- O app fica num subcaminho (`/epub-reader/`), então todo caminho no HTML, no
+  CSS e no JS é relativo (`css/styles.css`, `./db.js`, `../fonts/…`). Um
+  caminho absoluto (`/css/…`) funcionaria no `localhost` e quebraria no Pages.
+- O servidor do Pages diferencia maiúsculas de minúsculas, ao contrário do
+  macOS: o nome usado no código precisa bater exatamente com o do arquivo.
+- O Pages manda os arquivos com cache de cerca de 10 minutos. Logo depois de
+  publicar, recarregue com `Cmd+Shift+R` (ou `Ctrl+Shift+R`) para ver a
+  versão nova.
+
+**Sua própria cópia:** faça um fork do repositório e ative o Pages no fork do
+mesmo jeito. Ela fica em `https://<seu-usuario>.github.io/epub-reader/`. Os
+dados de cada leitor ficam no navegador dele, separados por endereço: uma
+cópia não enxerga a biblioteca da outra.
+
 ## Rodando localmente
+
+Para desenvolver, sirva a pasta com qualquer servidor estático:
 
 ```bash
 python3 -m http.server 8000

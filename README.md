@@ -4,8 +4,9 @@
 
 **Leia livros em outro idioma com a tradução ao lado, parágrafo por parágrafo.**
 
-Gratuito, sem cadastro e sem instalar nada. Roda direto no navegador, e seus
-livros ficam guardados só no seu computador.
+Gratuito, sem cadastro e sem instalar nada: é só abrir o endereço no
+navegador, no computador ou no celular. Seus livros ficam guardados só nesse
+navegador.
 
 [**Abrir o app →**](https://fabiotrindade.github.io/epub-reader/)
 &nbsp;·&nbsp; [Como usar](#como-usar)
@@ -40,7 +41,8 @@ livros ficam guardados só no seu computador.
    no navegador do computador ou do celular.
 2. Arraste um arquivo `.epub` para qualquer lugar da página ou clique em
    **Escolher arquivo**.
-3. Escolha um capítulo no sumário à esquerda. A tradução começa sozinha.
+3. Escolha um capítulo no sumário (no celular, pelo botão de menu no rodapé).
+   A tradução começa sozinha.
 
 > **Dica:** a primeira página de quase todo livro é a capa, que só tem imagem e
 > nada para traduzir. O app avisa e oferece um botão para ir direto ao primeiro
@@ -300,33 +302,19 @@ Armazenamento e diagnóstico**). Ele traz o
 navegador e a lista de avisos do app. Revise antes de colar, porque ele pode
 incluir o nome do arquivo do livro.
 
-## Rodar no seu computador ou publicar sua cópia
-
-O app é só um conjunto de arquivos estáticos: não tem build nem dependências
-para instalar.
-
-**No seu computador**, sirva a pasta com qualquer servidor estático:
-
-```bash
-python3 -m http.server 8000
-# abra http://localhost:8000
-```
-
-Abrir o `index.html` com dois cliques não funciona, porque os navegadores
-bloqueiam módulos JavaScript em arquivos locais.
-
-**Sua própria cópia online e gratuita:** faça um fork deste repositório e, no
-seu fork, vá em **Settings → Pages → Deploy from a branch**, escolhendo `main`
-e a pasta `/ (root)`. Em alguns minutos o app estará em
-`https://<seu-usuario>.github.io/epub-reader/`.
-
 ## Para desenvolvedores
 
-HTML, CSS e JavaScript puros, com módulos ES nativos e uma única dependência
-(JSZip). A estrutura do código, as decisões de projeto, os provedores de
-tradução, os códigos do diagnóstico e o roteiro de testes estão em
-**[docs/ARQUITETURA.md](docs/ARQUITETURA.md)**; o visual (cores, fontes,
-componentes e telas) segue **[docs/DESIGN.md](docs/DESIGN.md)**.
+O app é um conjunto de arquivos estáticos (HTML, CSS e JavaScript puros, com
+módulos ES nativos e uma única dependência, o JSZip) publicado pelo GitHub
+Pages direto da branch `main`. Não há build, servidor próprio nem banco de
+dados: cada push na `main` atualiza o site em alguns minutos.
+
+Em **[docs/ARQUITETURA.md](docs/ARQUITETURA.md)** estão a estrutura do código,
+as decisões de projeto, os provedores de tradução, os códigos do diagnóstico e
+o roteiro de testes, além de como publicar no GitHub Pages (inclusive uma
+cópia sua, por fork) e como rodar o app no seu computador enquanto
+desenvolve. O visual (cores, fontes, componentes e telas) segue
+**[docs/DESIGN.md](docs/DESIGN.md)**.
 
 Sugestões e correções são bem-vindas: abra uma issue para conversar ou envie um
 pull request.
