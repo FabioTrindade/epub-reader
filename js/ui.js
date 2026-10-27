@@ -739,6 +739,13 @@ export class AppearanceUI {
       set('fontSize', Math.min(SIZE_MAX, Math.max(SIZE_MIN, size)));
     };
 
+    // Atalho no topo: alterna direto entre claro e escuro, a partir do tema que
+    // está na tela (inclusive quando ele vem do sistema). "Sistema" fica no painel.
+    for (const btn of document.querySelectorAll('[data-action="theme-toggle"]')) {
+      btn.addEventListener('click', () => set('theme', isDarkTheme() ? 'light' : 'dark'));
+    }
+    DARK.addEventListener('change', () => this.#syncThemeToggle());
+
     $('#size-down').addEventListener('click', () => step(-1));
     $('#size-up').addEventListener('click', () => step(1));
     for (const btn of all('[data-font]')) btn.addEventListener('click', () => set('fontFamily', btn.dataset.font));
@@ -795,6 +802,16 @@ export class AppearanceUI {
     setPressed(all('.swatch'), (b) => b.dataset.color === prefs.markColor);
     setPressed(all('[data-lang]'), (b) => b.dataset.lang === prefs.targetLang);
     $('#lang-current').textContent = this.dialog.querySelector(`[data-lang="${prefs.targetLang}"]`)?.textContent || prefs.targetLang;
+    this.#syncThemeToggle();
+  }
+
+  /** O ícone troca pelo CSS; o nome acessível diz o que o clique fará. */
+  #syncThemeToggle() {
+    const label = isDarkTheme() ? 'Usar tema claro' : 'Usar tema escuro';
+    for (const btn of document.querySelectorAll('[data-action="theme-toggle"]')) {
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+    }
   }
 
   open(anchor) {
@@ -819,6 +836,13 @@ export class AppearanceUI {
 
 const MOBILE = window.matchMedia('(max-width: 768px)');
 const DESKTOP = window.matchMedia('(min-width: 1024px)');
+const DARK = window.matchMedia('(prefers-color-scheme: dark)');
+
+/** Tema efetivo na tela: o escolhido, ou o do sistema quando a escolha é "Sistema". */
+function isDarkTheme() {
+  const theme = document.documentElement.getAttribute('data-theme');
+  return theme ? theme === 'dark' : DARK.matches;
+}
 
 /**
  * No computador, painéis como o "Aa" abrem como popover sob o botão que os

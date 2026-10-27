@@ -119,9 +119,11 @@ celular), `420px` (ajustes finos).
   "Autor · Cap. N" (12px `--muted`).
 - **Centro (computador):** seletor de modo.
 - **Direita:** indicador "Traduzindo 62%" (só durante a tradução), botão **Aa**,
-  botão Biblioteca, botão **⋯**.
+  botão de tema (lua/sol), botão Biblioteca, botão **⋯**.
 - **Mudanças em relação ao HTML atual:**
-  - `#btn-settings` e `#btn-theme` viram um único `#btn-appearance` ("Aa").
+  - `#btn-settings` vira o botão "Aa". O botão de tema continua no topo, como
+    atalho entre claro e escuro: o leitor não encontrava o tema só no painel.
+    No topo da leitura do celular ele não cabe e fica só no painel Aa.
   - `#btn-notifications` vai para dentro do menu ⋯ (itens: Notificações,
     Copiar diagnóstico, Ajuda). Quando houver aviso ou erro, mostrar um ponto
     `--accent` (ou `--error`) sobre o ⋯ e manter o `#notif-badge` dentro do menu.
@@ -147,12 +149,14 @@ celular), `420px` (ajustes finos).
 - Usar `aria-pressed` em cada botão.
 
 ### Área de leitura
-- **Lado a lado:** largura máxima de 1180px, 2 colunas iguais com 64px de espaço
-  entre elas. **Cada par de parágrafos fica numa linha própria** (grid por
+- **Lado a lado:** largura toda da área de leitura, 2 colunas iguais com 64px de
+  espaço entre elas. **Cada par de parágrafos fica numa linha própria** (grid por
   parágrafo), para que original e tradução comecem sempre alinhados.
 - Acima das colunas, cabeçalhos pequenos: "Inglês · original" e
   "Português (Brasil) · tradução" (12px `--muted`), com borda inferior.
-- **Original ou Tradução sozinho:** coluna única de no máximo 760px.
+- **Original ou Tradução sozinho:** coluna única na largura toda da área de
+  leitura. (Decisão do leitor, que prefere aproveitar a tela: a primeira versão
+  desta especificação limitava a 760px e o lado a lado a 1180px.)
 - Espaço entre parágrafos de 28px (computador) e 20px (celular). Margens laterais
   de 24px no celular.
 - **Trecho salvo:** uma fitinha (ícone de marcador preenchido, 16px, `--accent`)
@@ -212,7 +216,8 @@ bottom sheet no celular. Na ordem:
 6. Linha **Armazenamento e diagnóstico** › mostra o espaço usado e leva aos
    botões "Limpar cache de traduções deste livro" e "Copiar diagnóstico".
 
-O botão de lua (`#btn-theme`) deixa de existir; o tema fica neste painel.
+O tema fica neste painel (com a opção "Sistema") e também no botão de lua/sol
+do topo, que alterna direto entre claro e escuro.
 
 ### Biblioteca
 - **Computador:** topo com a marca "EPUB Reader", o botão Aa e o botão primário

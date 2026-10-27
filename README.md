@@ -138,7 +138,8 @@ O botão **Aa** no topo abre as preferências, que ficam salvas no navegador:
 - **Tamanho do texto**, de 14 a 28 pixels.
 - **Fonte** serifada ou sem serifa, e **espaçamento** entre linhas compacto,
   normal ou amplo.
-- **Tema** claro, escuro ou seguindo o sistema.
+- **Tema** claro, escuro ou seguindo o sistema. O botão de lua (ou de sol, no
+  tema escuro) ao lado do Aa alterna direto entre claro e escuro.
 - **Cor da marca "parei aqui"**: âmbar, verde, azul, rosa ou roxo. Todas foram
   escolhidas para manter o texto legível nos dois temas.
 - **Traduzir para**: o idioma da tradução.
