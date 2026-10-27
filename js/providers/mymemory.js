@@ -6,6 +6,8 @@
  * é fallback, não padrão — entra em cena quando o gtx falha.
  */
 
+import { fetchText } from './http.js';
+
 const ENDPOINT = 'https://api.mymemory.translated.net/get';
 
 /** Limite do serviço, em caracteres: com 501 ele responde "QUERY LENGTH LIMIT EXCEEDED". */
@@ -20,7 +22,7 @@ function fail(code, message) {
 /** en-US → en; pt-BR fica como está (o serviço exige a região no alvo). */
 const shortLang = (l) => l.split('-')[0];
 
-async function translateOne(text, targetLang, sourceLang) {
+async function translateOne(text, targetLang, sourceLang, signal) {
   const source = sourceLang === 'auto' ? 'en' : shortLang(sourceLang);
   const url = `${ENDPOINT}?${new URLSearchParams({
     q: text,
@@ -28,15 +30,22 @@ async function translateOne(text, targetLang, sourceLang) {
   })}`;
 
   let res;
+  let body;
   try {
-    res = await fetch(url);
+    ({ res, body } = await fetchText(url, {}, { signal }));
   } catch (err) {
+    if (err.message === 'ABORTED' || err.code === 'timeout') throw err;
     throw fail('network', `Falha de rede: ${err.message}`);
   }
 
   if (!res.ok && res.status !== 429) throw fail('http', `HTTP ${res.status} no MyMemory`);
 
-  const data = await res.json();
+  let data;
+  try {
+    data = JSON.parse(body);
+  } catch {
+    throw fail('parse', 'Resposta ilegível do MyMemory');
+  }
 
   // A cota diária vem ora como 429, ora como 200 com o aviso embutido no
   // próprio texto traduzido — este segundo caso passaria como tradução válida.
@@ -105,13 +114,13 @@ export const myMemory = {
   supportsDictionary: false,
   maxChunkChars: MAX_CHARS,
 
-  async translateBatch(texts, targetLang, sourceLang = 'auto') {
+  async translateBatch(texts, targetLang, sourceLang = 'auto', { signal } = {}) {
     const out = [];
     for (const text of texts) {
       const translated = [];
       for (const piece of splitLong(text)) {
         const trimmed = piece.trim();
-        if (trimmed) translated.push(await translateOne(trimmed, targetLang, sourceLang));
+        if (trimmed) translated.push(await translateOne(trimmed, targetLang, sourceLang, signal));
       }
       out.push(translated.join(' '));
     }
