@@ -59,10 +59,11 @@ O seletor no centro do topo escolhe o que aparece:
 | **Tradução** | Só a tradução. |
 
 O modo escolhido fica salvo. Enquanto um capítulo é traduzido, o topo mostra
-"Traduzindo N%" (clique nele para cancelar) e os parágrafos que ainda não
-chegaram aparecem como barras cinzas. Um capítulo traduzido uma vez fica
-guardado no navegador e aparece na hora quando você volta a ele, sem gastar
-internet.
+"Traduzindo N%" e os parágrafos que ainda não chegaram aparecem como barras
+cinzas. Clicando no indicador, você pode **cancelar a tradução**, o que volta
+para o modo Original (no celular, essa opção fica no **Aa**). Um capítulo
+traduzido uma vez fica guardado no navegador e aparece na hora quando você
+volta a ele, sem gastar internet.
 
 O idioma do livro é detectado automaticamente. O idioma da tradução pode ser
 português do Brasil (padrão), português de Portugal, espanhol, francês, alemão
@@ -94,10 +95,11 @@ São duas marcas diferentes, cada uma com um visual próprio:
 **Salvar** e **Copiar**. Se o trecho já estiver marcado, o primeiro botão vira
 **Remover marca**.
 
-**Sem selecionar nada**, a tecla `m` ou o pequeno botão ao lado do número do
-capítulo, no rodapé, marcam o parágrafo que está no topo da tela; a tecla `b`
-salva esse parágrafo. O texto do botão sempre diz o que o próximo clique vai
-fazer.
+**Sem selecionar nada**, a tecla `m` ou o pequeno botão no rodapé, ao lado do
+nome do capítulo, marcam o parágrafo que está no topo da tela; a tecla `b`
+salva esse parágrafo. Com a marca à vista, o mesmo botão (e a tecla `m`)
+passa a remover a marca: o ícone muda e a dica do botão diz o que o próximo
+clique vai fazer.
 
 Quando a marca sai de vista, aparece o botão **Voltar para onde parei**, que
 leva até ela mesmo que esteja em outro capítulo. Ao reabrir o livro, ele já
@@ -106,13 +108,18 @@ abre na marca.
 ### Biblioteca e progresso
 
 O ícone de livros no topo (no celular, a seta de voltar) abre a sua biblioteca.
-No alto fica o livro que você está lendo, com a frase onde parou e o botão
-**Continuar de onde parei**. Embaixo, todos os livros, com quanto você já leu
-de cada um: o percentual é calculado pela quantidade de texto, não pelo número
-de capítulos, então "50%" quer dizer metade do livro de verdade. Livro
-terminado aparece como "Concluído", e livro que você nunca abriu, como "Não
-iniciado". O rodapé da leitura mostra o capítulo e o mesmo número:
-"CHAPTER 1. Loomings. · 2% do livro".
+No alto fica o último livro que você abriu e ainda não terminou, com o
+capítulo, a frase onde você parou (se marcou uma) e o botão **Continuar de
+onde parei**. Embaixo, todos os livros, com quanto você já leu de cada um: o
+percentual é calculado pela quantidade de texto, não pelo número de capítulos,
+então "50%" quer dizer metade do livro de verdade. Livro terminado aparece
+como "Concluído", e livro que você nunca abriu, como "Não iniciado". O rodapé
+da leitura mostra o capítulo e o mesmo número: "CHAPTER 1. Loomings. · 2% do
+livro".
+
+Para abrir outro livro, use **Adicionar livro** (o **+** no celular) ou
+arraste o arquivo para a janela. A partir de seis livros aparece uma busca por
+título ou autor.
 
 Para tirar um livro da biblioteca, use o menu **⋯** no card e escolha
 **Remover livro**. Isso apaga também o progresso, as marcas e as traduções
@@ -125,7 +132,8 @@ guardadas daquele livro.
 O app se adapta a telas pequenas. Como duas colunas não cabem, os modos de
 leitura viram duas opções logo abaixo do topo, **Original** e **Tradução**, e o
 sumário abre pelo botão de menu no rodapé. Se você usa **Lado a lado** no
-computador, ele continua assim quando você volta para a tela grande.
+computador, ele continua assim quando você volta para a tela grande. Durante a
+leitura, o tema claro ou escuro fica no **Aa**.
 
 <p align="center">
   <img src="docs/screenshots/celular-escuro.png" alt="App no celular com tema escuro, mostrando o capítulo 1 de Moby Dick traduzido" width="300">
@@ -172,8 +180,9 @@ tradução. Veja o que fica com você e o que sai:
 | O texto dos capítulos que você traduz | É enviado ao **Google Tradutor** para ser traduzido. Se o Google falhar, vai para o **MyMemory**. |
 | A palavra que você clica no dicionário | É enviada ao **Google Tradutor**. |
 
-No modo **Original**, nada do livro é enviado. Cada parágrafo é enviado uma vez
-só: depois de traduzido, ele fica guardado no navegador. O site é hospedado no
+No modo **Original**, nenhum texto do livro é traduzido nem enviado; só a
+palavra que você clicar no dicionário sai do navegador. Cada parágrafo é
+enviado uma vez só: depois de traduzido, ele fica guardado no navegador. O site é hospedado no
 GitHub Pages, que, como qualquer servidor web, registra o endereço IP de quem o
 acessa.
 
@@ -286,7 +295,8 @@ profissional.
 
 Abra uma [issue](https://github.com/FabioTrindade/epub-reader/issues)
 descrevendo o que você fez e o que aconteceu. Ajuda muito colar o relatório do
-item **Copiar diagnóstico**, no menu **⋯** do topo da tela. Ele traz o
+item **Copiar diagnóstico**, no menu **⋯** do topo da tela (ou em **Aa →
+Armazenamento e diagnóstico**). Ele traz o
 navegador e a lista de avisos do app. Revise antes de colar, porque ele pode
 incluir o nome do arquivo do livro.
 
@@ -315,7 +325,8 @@ e a pasta `/ (root)`. Em alguns minutos o app estará em
 HTML, CSS e JavaScript puros, com módulos ES nativos e uma única dependência
 (JSZip). A estrutura do código, as decisões de projeto, os provedores de
 tradução, os códigos do diagnóstico e o roteiro de testes estão em
-**[docs/ARQUITETURA.md](docs/ARQUITETURA.md)**.
+**[docs/ARQUITETURA.md](docs/ARQUITETURA.md)**; o visual (cores, fontes,
+componentes e telas) segue **[docs/DESIGN.md](docs/DESIGN.md)**.
 
 Sugestões e correções são bem-vindas: abra uma issue para conversar ou envie um
 pull request.

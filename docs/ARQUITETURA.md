@@ -64,9 +64,10 @@ primeiro pedaço; *Team Topologies* tem 16 arquivos assim em 44. Cada pedaço
 continua sendo um capítulo interno — as setas passam por ele e progresso,
 marcadores e "parei aqui" guardam as mesmas posições —, mas herda o título da
 entrada anterior e acende ela na lateral. A capa embrulhada num xhtml antes da
-primeira entrada herda da seguinte. O contador do rodapé e o "Capítulo X de N"
-da biblioteca contam pela lateral. Sem sumário utilizável, cada arquivo do
-spine continua sendo um item.
+primeira entrada herda da seguinte. O rodapé e a biblioteca mostram o título
+dessa entrada, nunca uma contagem: "Capítulo 12 de 29" contaria entradas do
+sumário (capa, prefácio, partes) e contradiria a numeração do livro. Sem
+sumário utilizável, cada arquivo do spine continua sendo um item.
 
 **Tradução em lote com re-alinhamento.** Um request por parágrafo seria lento
 demais; o capítulo inteiro de uma vez perderia a correspondência. O meio-termo
