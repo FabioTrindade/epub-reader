@@ -155,12 +155,20 @@ export class Reader extends EventTarget {
       const orig = document.createElement('div');
       orig.className = 'tr-orig';
       while (block.firstChild) orig.append(block.firstChild);
-
-      const trans = document.createElement('div');
-      trans.className = 'tr-trans';
-
-      block.append(orig, trans);
+      block.append(orig);
       block.classList.add('tr-row');
+
+      // Bloco sem nenhuma letra (número de capítulo ou de página, "* * *"):
+      // não há o que traduzir, e repeti-lo na coluna da tradução só duplica.
+      // Continua sendo linha — o índice dos blocos ancora marcas e trechos.
+      if (!/\p{L}/u.test(orig.textContent)) {
+        block.classList.add('tr-plain');
+      } else {
+        const trans = document.createElement('div');
+        trans.className = 'tr-trans';
+        block.append(trans);
+      }
+
       // Âncora do bloco: serve ao cache de tradução e ao marcador de leitura.
       block.dataset.hash = hashText(normalize(orig.textContent));
       block.dataset.blockIndex = index;
@@ -216,7 +224,7 @@ export class Reader extends EventTarget {
   async translate() {
     if (!this.container || !this.#translator) return;
 
-    const rows = [...this.container.querySelectorAll('.tr-row')];
+    const rows = [...this.container.querySelectorAll('.tr-row:not(.tr-plain)')];
     if (!rows.length) return;
 
     const texts = rows.map((r) => r.querySelector('.tr-orig').textContent);

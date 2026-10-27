@@ -633,6 +633,13 @@ svg.icon-fill { fill: currentColor; stroke: none; }
   border-left: 3px solid var(--border);
   color: var(--muted);
 }
+/* O Calibre aninha blockquotes para fazer recuo (até dez níveis numa
+   assinatura de epígrafe): só o de fora desenha a barra e o recuo. */
+.chapter-content blockquote blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 .chapter-content a { color: var(--accent); }
 .chapter-content a.dead-link {
   color: inherit;
@@ -693,6 +700,11 @@ svg.icon-fill { fill: currentColor; stroke: none; }
 
 .mode-original .tr-trans { display: none; }
 .mode-translated .tr-orig { display: none; }
+
+/* Linha sem letras (número, "* * *"): uma vez só, em qualquer modo, com o
+   display de origem do elemento — célula de tabela continua célula. */
+.mode-translated .tr-plain > .tr-orig { display: block; }
+.mode-split .tr-row.tr-plain { display: revert; }
 
 /* Cada par original/tradução é uma linha própria do grid: os dois começam
    sempre na mesma altura, por mais que um seja mais longo que o outro. */

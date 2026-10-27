@@ -90,6 +90,18 @@ permanece no lugar. Envolvê-lo num `<div>` externo quebraria `<li>` dentro de
 (preferências, progresso, marcadores). Livro e cache de tradução vão para o
 IndexedDB: localStorage tem ~5MB e bloqueia a thread principal.
 
+**Bloco sem letras não ganha coluna de tradução.** Número de capítulo numa
+tabela de layout (Team Topologies), número de página na lista de ilustrações
+(Pride and Prejudice), "* * * * * *" (Moby Dick): repetir na tradução só
+duplicava, e uma célula de tabela virando grade desmontava a tabela. O bloco
+continua sendo `.tr-row` (com a classe `.tr-plain`), porque o índice dos
+blocos ancora marcas e trechos salvos; só não tem `.tr-trans` nem vai ao
+tradutor, e mantém o display de origem (`revert`).
+
+**Blockquotes aninhados contam como um só.** O Calibre faz recuo aninhando
+blockquotes (dez níveis numa assinatura de epígrafe); como o CSS do livro é
+descartado, só o de fora desenha a barra e o recuo.
+
 **O CSS do próprio livro é descartado de propósito.** É a principal causa de
 texto ilegível no dark mode. A tipografia vem das preferências do leitor.
 
