@@ -20,6 +20,7 @@ js/
   renderer.js         sanitiza XHTML, resolve imagens e links
   translator.js       cache, chunking, retry, fallback
   providers/          google-gtx.js (padrão) · mymemory.js (fallback)
+                      · http.js (pedido com tempo-limite e cancelamento)
   dictionary.js       clique-na-palavra: popover ou painel no celular
   ui.js               menus, painéis, biblioteca, aparência, notificações
   reader.js           capítulo atual, navegação, progresso
@@ -189,6 +190,29 @@ As requisições saem do navegador de cada leitor, não de um servidor do projet
 Por isso não há custo de backend, e os limites de uso são contados por IP de cada
 leitor.
 
+**Todo pedido tem prazo.** `fetchText`, em `js/providers/http.js`, faz o pedido
+e lê o corpo em até 10 s (o Google responde em 1–2 s). Sem isso, um servidor
+que aceita a conexão e não responde prendia o capítulo em "Traduzindo N%" para
+sempre. O prazo vencido vira uma falha comum e segue o caminho de sempre: nova
+tentativa com backoff, troca de provider e, por fim, o aviso com "Tentar de
+novo". O mesmo `fetchText` leva o `AbortSignal` do tradutor até o `fetch`, e por
+isso "Cancelar tradução" interrompe também os pedidos em andamento.
+
+**Serviços esgotados, capítulo encerrado.** Quando um chunk esgota todas as
+tentativas no último provider, os demais chunks do capítulo desistem sem pedir
+nada; senão cada chunk repetiria a espera. Com os dois serviços travados, o
+capítulo 1 de *Moby Dick* libera em ~44 s; um capítulo de um chunk só leva até
+~64 s (2 tentativas no Google e 4 no MyMemory, mais o backoff). `resetProvider()`, chamado a cada
+nova tradução, zera esse estado.
+
+**MyMemory: 500 caracteres por pedido.** O limite é em caracteres (testado: 501
+é recusado; 480 caracteres com travessões, 504 bytes, passam). `splitLong`
+divide em camadas e só desce de nível no pedaço que ainda não cabe: fim de
+frase, pontuação interna, espaço entre palavras e, por último, corte no meio de
+uma "palavra" maior que o limite. Os pedaços são fatias exatas do texto. *Moby
+Dick* tem frases de até 2.329 caracteres, que a divisão só por frase mandava
+inteiras e o serviço recusava.
+
 O LibreTranslate não é mais viável como padrão: as instâncias públicas passaram
 a exigir API key (`libretranslate.de` hoje redireciona para
 `de.libretranslate.com`, e ambos respondem pedindo chave). Para usá-lo, crie
@@ -211,7 +235,7 @@ gere uma linha e não quarenta. Só `warn` e `error` também disparam toast. O b
 | `chapter-missing` / `asset-missing` | Arquivo referenciado não existe no zip |
 | `content-sanitized` | Script ou handler inline removido |
 | `translate-misaligned` | Guarda de alinhamento disparou; modo lento |
-| `translate-ratelimited` | HTTP 429; em backoff |
+| `translate-ratelimited` | HTTP 429 ou bloqueio anti-abuso; em backoff |
 | `provider-fallback` | Trocou de Google para MyMemory |
 | `translate-failed` | Desistiu após as tentativas |
 | `offline` | Sem internet ao traduzir |

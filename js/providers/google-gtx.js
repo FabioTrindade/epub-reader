@@ -13,6 +13,8 @@
  * o fallback em translator.js.
  */
 
+import { fetchText } from './http.js';
+
 const ENDPOINT = 'https://translate.googleapis.com/translate_a/single';
 
 function fail(code, message) {
@@ -21,18 +23,20 @@ function fail(code, message) {
   return err;
 }
 
-async function request(params, body) {
+async function request(params, body, signal) {
   const url = `${ENDPOINT}?${new URLSearchParams(params)}`;
 
   let res;
+  let text;
   try {
-    res = await fetch(url, {
+    ({ res, body: text } = await fetchText(url, {
       method: 'POST',
       // form-urlencoded é CORS-safelisted: não dispara preflight.
       headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
       body: new URLSearchParams(body).toString(),
-    });
+    }, { signal }));
   } catch (err) {
+    if (err.message === 'ABORTED' || err.code === 'timeout') throw err;
     // Ao limitar, o endpoint redireciona para a página anti-abuso do Google,
     // que não traz cabeçalho CORS — o navegador entrega isso como uma falha de
     // rede genérica. Dizer "sem internet" aqui seria enganoso.
@@ -48,7 +52,7 @@ async function request(params, body) {
   if (!res.ok) throw fail('http', `HTTP ${res.status} no serviço de tradução`);
 
   try {
-    return await res.json();
+    return JSON.parse(text);
   } catch {
     throw fail('parse', 'Resposta ilegível do serviço de tradução');
   }
@@ -63,12 +67,14 @@ export const googleGtx = {
 
   /**
    * @param {string[]} texts  parágrafos SEM quebras internas (o chamador normaliza)
+   * @param {{ signal?: AbortSignal }} opts  cancela o pedido em andamento
    * @returns {Promise<string[]>} mesma quantidade, na mesma ordem
    */
-  async translateBatch(texts, targetLang, sourceLang = 'auto') {
+  async translateBatch(texts, targetLang, sourceLang = 'auto', { signal } = {}) {
     const data = await request(
       { client: 'gtx', sl: sourceLang, tl: targetLang, dt: 't', dj: '1' },
-      { q: texts.join('\n') }
+      { q: texts.join('\n') },
+      signal
     );
 
     const sentences = data?.sentences;

@@ -35,6 +35,12 @@ const sleep = (ms, signal) =>
 export class Translator {
   #providerIndex = 0;
   #consecutiveFailures = 0;
+  /**
+   * Um chunk já esgotou todas as tentativas em todos os providers: os demais
+   * desistem sem pedir nada. Insistir só repetiria a espera (até 10 s por
+   * pedido) em serviços que não respondem, chunk após chunk.
+   */
+  #exhausted = false;
 
   constructor({ bookId, targetLang, sourceLang = 'auto' }) {
     this.bookId = bookId;
@@ -48,6 +54,7 @@ export class Translator {
   resetProvider() {
     this.#providerIndex = 0;
     this.#consecutiveFailures = 0;
+    this.#exhausted = false;
   }
 
   #demoteProvider(reason) {
@@ -158,9 +165,10 @@ export class Translator {
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       if (signal?.aborted) throw new Error('ABORTED');
+      if (this.#exhausted) return chunk.map(([hash]) => [hash, null]);
 
       try {
-        const translated = await this.provider.translateBatch(texts, this.targetLang, this.sourceLang);
+        const translated = await this.provider.translateBatch(texts, this.targetLang, this.sourceLang, { signal });
         this.#consecutiveFailures = 0;
         return chunk.map(([hash], i) => [hash, translated[i]]);
       } catch (err) {
@@ -187,6 +195,7 @@ export class Translator {
             continue;
           }
           if (isLastAttempt) {
+            this.#exhausted = true;
             notify.error('translate-failed', 'Falha ao traduzir',
               `${err.message.replace(/\.$/, '')}. Os parágrafos afetados seguem no original.`);
             return chunk.map(([hash]) => [hash, null]);
@@ -206,9 +215,11 @@ export class Translator {
     for (const [hash, text] of chunk) {
       if (signal?.aborted) throw new Error('ABORTED');
       try {
-        const [translated] = await this.provider.translateBatch([text], this.targetLang, this.sourceLang);
+        const [translated] = await this.provider.translateBatch([text], this.targetLang, this.sourceLang, { signal });
         out.push([hash, translated]);
-      } catch {
+      } catch (err) {
+        // Cancelar não é falha do parágrafo: interrompe o capítulo inteiro.
+        if (err.message === 'ABORTED') throw err;
         out.push([hash, null]);
       }
     }
